@@ -1,0 +1,17 @@
+{
+  "name": "gh-roleplay",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Monorepo da loja GH Roleplay: apps/web (site + painel) e apps/api (backend Node puro).",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "start": "npm run start --workspace apps/api",
+    "dev": "npm run dev --workspace apps/api",
+    "test": "npm test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

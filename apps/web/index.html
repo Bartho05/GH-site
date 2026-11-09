@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GH Roleplay — Loja PvP</title>
+  <meta name="description" content="Loja do GH Roleplay: produtos digitais com entrega instantânea, suporte 24/7 e promoções toda semana.">
+
+  <!-- Fonte -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Ícones (Lucide) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Tema salvo aplicado antes da pintura (evita troca de cor piscando) -->
+  <script>
+    (function () {
+      try {
+        var salvo = localStorage.getItem('gh_tema');
+        if (['laranja', 'rosa', 'verde'].indexOf(salvo) >= 0 && salvo !== 'laranja') {
+          document.documentElement.dataset.tema = salvo;
+        }
+        var anim = localStorage.getItem('gh_anim');
+        if (anim === 'off') document.documentElement.dataset.anim = 'off';
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <a href="#conteudo" class="skip-link">Pular para o conteúdo</a>
+
+  <!-- ===== Barra de anúncio (cupom) — texto vem do CONFIG via scripts.js ===== -->
+  <div id="anuncio" class="anuncio">
+    <p>&nbsp;</p>
+  </div>
+
+  <!-- ===== Cabeçalho ===== -->
+  <header id="cabecalho" class="cabecalho">
+    <div class="container">
+      <nav class="cab-nav" aria-label="Navegação principal">
+        <div class="cab-esquerda">
+          <a href="/" class="marca">
+            <span class="marca-logo" aria-hidden="true">GH</span>
+            <span class="marca-nome">
+              <span class="marca-titulo" id="marca-nome">GH Roleplay</span>
+              <i data-lucide="shield-check" class="marca-verificado" aria-label="Loja verificada"></i>
+            </span>
+          </a>
+
+          <!-- Busca -->
+          <div class="busca cab-busca" id="busca-desktop">
+            <i data-lucide="search" class="busca-icone" aria-hidden="true"></i>
+            <label for="campo-busca" class="sr-only">Buscar produto</label>
+            <input id="campo-busca" type="search" class="busca-campo" placeholder="Buscar produto" autocomplete="off">
+            <div id="busca-resultados" class="busca-resultados" role="region" aria-live="polite" hidden></div>
+          </div>
+        </div>
+
+        <!-- Mini-ranking (desktop) — leva ao pódio -->
+        <a href="#podio" class="pilula-ranking" id="pilula-ranking" aria-label="Ranking dos maiores apoiadores" hidden></a>
+
+        <ul class="cab-acoes">
+          <li>
+            <button type="button" class="btn-icone" id="btn-busca-mobile" aria-label="Buscar produto" aria-expanded="false" aria-controls="busca-mobile">
+              <i data-lucide="search"></i>
+            </button>
+          </li>
+          <li class="ajustes-wrap">
+            <button type="button" class="btn-icone" id="btn-ajustes" aria-haspopup="dialog" aria-expanded="false" aria-label="Ajustes do site">
+              <i data-lucide="settings"></i>
+            </button>
+            <div class="painel ajustes-painel" id="painel-ajustes" role="dialog" aria-label="Ajustes do site" hidden>
+              <p class="painel-secao">Movimento</p>
+              <button type="button" class="chave" id="chave-animacao" aria-pressed="false">
+                <span class="chave-nome">Reduzir animações</span>
+                <span class="chave-trilho" aria-hidden="true"><span class="chave-bolinha"></span></span>
+              </button>
+              <p class="painel-dica">Desliga a digitação do título e as entradas suaves.</p>
+
+              <p class="painel-secao">Cor da loja</p>
+              <div class="painel-grupo" role="radiogroup" aria-label="Cor da loja" id="temas">
+                <button type="button" role="radio" class="painel-opcao" data-tema-opcao="laranja" aria-checked="true">
+                  <span class="amostra amostra-laranja" aria-hidden="true"></span>
+                  <span class="painel-nome">LARANJA</span>
+                  <i data-lucide="check" class="opcao-visto"></i>
+                </button>
+                <button type="button" role="radio" class="painel-opcao" data-tema-opcao="rosa" aria-checked="false">
+                  <span class="amostra amostra-rosa" aria-hidden="true"></span>
+                  <span class="painel-nome">ROSA NEON</span>
+                  <i data-lucide="check" class="opcao-visto"></i>
+                </button>
+                <button type="button" role="radio" class="painel-opcao" data-tema-opcao="verde" aria-checked="false">
+                  <span class="amostra amostra-verde" aria-hidden="true"></span>
+                  <span class="painel-nome">VERDE</span>
+                  <i data-lucide="check" class="opcao-visto"></i>
+                </button>
+              </div>
+              <p class="painel-dica">A cor vale para todo o site e fica lembrada.</p>
+            </div>
+          </li>
+          <li class="suporte-wrap">
+            <button type="button" class="btn-icone" id="btn-suporte" aria-haspopup="dialog" aria-expanded="false" aria-label="Suporte">
+              <i data-lucide="headset"></i>
+            </button>
+            <div class="painel ajustes-painel" id="painel-suporte" role="dialog" aria-label="Canais de atendimento" hidden>
+              <p class="painel-secao">Canais de atendimento</p>
+              <div class="painel-grupo" id="links-suporte"></div>
+              <p class="painel-dica">Resposta em minutos, todos os dias.</p>
+            </div>
+          </li>
+          <li>
+            <a href="#entrar" class="btn btn-secundario btn-entrar" id="btn-entrar" aria-label="Entrar na sua conta">
+              <i data-lucide="user" class="btn-icone-expandida"></i>
+              <span class="btn-rotulo">Entrar</span>
+            </a>
+          </li>
+          <li>
+            <button type="button" class="btn btn-primario" id="btn-carrinho" aria-label="Abrir carrinho">
+              <i data-lucide="shopping-cart" class="btn-icone-expandida"></i>
+              <span class="btn-rotulo">Carrinho</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Faixa de categorias -->
+      <nav class="faixa-categorias" aria-label="Categorias" id="faixa-categorias">
+        <button type="button" class="cat-seta" id="cat-seta-esq" aria-label="Ver categorias anteriores" hidden>
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <ul class="cat-trilho" id="cat-trilho"></ul>
+        <button type="button" class="cat-seta" id="cat-seta-dir" aria-label="Ver mais categorias" hidden>
+          <i data-lucide="chevron-right"></i>
+        </button>
+      </nav>
+
+      <!-- Busca mobile -->
+      <div class="busca busca-mobile" id="busca-mobile" hidden>
+        <i data-lucide="search" class="busca-icone" aria-hidden="true"></i>
+        <label for="campo-busca-mobile" class="sr-only">Buscar produto</label>
+        <input id="campo-busca-mobile" type="search" class="busca-campo" placeholder="Buscar produto" autocomplete="off">
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Fundo com grade + luz ===== -->
+  <div class="fundo-pagina" aria-hidden="true">
+    <div class="fundo-grade"><i class="grade-luz"></i></div>
+  </div>
+
+  <!-- ===== Carrinho (gaveta lateral) ===== -->
+  <div id="carrinho" class="carrinho" role="dialog" aria-modal="true" aria-labelledby="carrinho-titulo" hidden>
+    <div class="carrinho-sombra" data-fechar-carrinho></div>
+    <aside class="carrinho-caixa">
+      <div class="carrinho-topo">
+        <h4 id="carrinho-titulo">Carrinho</h4>
+        <button type="button" class="btn-icone" data-fechar-carrinho aria-label="Fechar carrinho">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="carrinho-lista" id="carrinho-lista"></div>
+
+      <div class="carrinho-pe">
+        <div class="cupom-progresso" id="cupom-progresso">
+          <div class="cupom-progresso-topo">
+            <p id="cupom-progresso-texto">Faltam <strong>R$ —</strong> para 10% OFF</p>
+            <i data-lucide="ticket-percent" aria-hidden="true"></i>
+          </div>
+          <div class="cupom-progresso-trilha"><div class="cupom-progresso-barra" id="cupom-progresso-barra"></div></div>
+        </div>
+        <div class="carrinho-total">
+          <span>Total</span>
+          <strong id="carrinho-total-valor">R$ 0,00</strong>
+        </div>
+        <a href="#checkout" class="btn btn-primario btn-grande" id="btn-checkout">
+          <i data-lucide="lock"></i> Finalizar compra
+        </a>
+        <button type="button" class="carrinho-continuar" data-fechar-carrinho>Continuar comprando</button>
+      </div>
+    </aside>
+  </div>
+
+  <main id="conteudo" tabindex="-1">
+    <!-- ===== Banner (hero) ===== -->
+    <section class="hero" id="banner">
+      <div class="hero-fundo" aria-hidden="true"></div>
+      <div class="hero-fundimento" aria-hidden="true"></div>
+
+      <div class="container hero-grade">
+        <div class="hero-texto">
+          <h1 class="hero-titulo" id="hero-titulo">
+            <span class="sr-only">Loja para jogadores de elite</span>
+            <span class="datilo" aria-hidden="true">
+              <span class="datilo-linha" id="datilo-inicio">Domine</span>
+              <span class="datilo-cursor" id="cursor-1"></span>
+              <span class="datilo-linha datilo-destaque" id="datilo-destaque">o PvP da cidade</span>
+              <span class="datilo-cursor datilo-cursor-2" id="cursor-2"></span>
+            </span>
+          </h1>
+
+          <p class="hero-pilares" id="hero-pilares">Competição • Loja • Recompensas • Comunidade</p>
+
+          <div class="hero-acoes">
+            <a href="#conectar" class="hero-servidor" id="hero-servidor">
+              <span class="servidor-online">
+                <span class="servidor-ponto" aria-hidden="true"></span>
+                <strong id="servidor-num">312</strong>
+                <span>jogadores online agora</span>
+              </span>
+              <span class="servidor-conectar">Conectar <i data-lucide="arrow-up-right"></i></span>
+            </a>
+            <a href="#store" class="btn btn-primario btn-grande">
+              <i data-lucide="arrow-down"></i> Explorar produtos
+            </a>
+          </div>
+        </div>
+
+        <!-- Pódio: os 3 maiores apoiadores -->
+        <div class="podio-palco">
+          <span class="podio-estilhaços" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          <ol class="banner-podio" id="podio" aria-label="Maiores apoiadores da loja"></ol>
+        </div>
+      </div>
+
+      <!-- Barra de pagamentos -->
+      <div class="hero-pagamentos">
+        <div class="container hero-pay-conteudo">
+          <div class="pay-esquerda">
+            <span class="pay-pagamento-seguro"><i data-lucide="shield-check"></i> Pagamento seguro</span>
+            <span class="pay-chips" id="pay-chips"></span>
+          </div>
+          <a href="#store" class="pay-ver-catalogo">Ver o catálogo <i data-lucide="arrow-down"></i></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Números da loja ===== -->
+    <section class="container numeros" id="numeros" aria-label="A loja em números"></section>
+
+    <!-- ===== Catálogo ===== -->
+    <section class="container loja" id="store">
+      <div id="secoes-produtos"></div>
+    </section>
+
+    <!-- ===== Depoimentos ===== -->
+    <section class="container depoimentos" id="depoimentos" aria-labelledby="depoimentos-titulo">
+      <h2 class="secao-titulo" id="depoimentos-titulo">Depoimentos de clientes</h2>
+      <div class="depoimentos-faixa">
+        <div class="depoimentos-trilho" id="depoimentos-trilho"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Rodapé ===== -->
+  <footer class="rodape">
+    <div class="container rodape-grade">
+      <div class="rodape-marca">
+        <a href="/" class="marca">
+          <span class="marca-logo" aria-hidden="true">GH</span>
+          <span class="rodape-marca-nome">GH Roleplay</span>
+        </a>
+        <p class="rodape-descricao" id="rodape-descricao">Aqui você apoia o servidor: os recursos vão para a infraestrutura, melhorias e para as novidades do jogo.</p>
+      </div>
+      <nav class="rodape-coluna" aria-label="Loja">
+        <p class="rodape-titulo">Loja</p>
+        <a href="#store">Catálogo</a>
+        <a href="#podio">Ranking</a>
+        <button type="button" data-abrir-carrinho>Carrinho</button>
+      </nav>
+      <nav class="rodape-coluna" aria-label="Ajuda">
+        <p class="rodape-titulo">Ajuda</p>
+        <a href="#termos">Termos e condições</a>
+        <a href="#contato">Contato</a>
+        <a href="admin.html" id="link-admin">Painel do dono</a>
+      </nav>
+      <div class="rodape-coluna">
+        <p class="rodape-titulo">Comunidade</p>
+        <div class="rodape-redes" id="rodape-redes"></div>
+      </div>
+    </div>
+    <div class="rodape-barra">
+      <div class="container rodape-barra-conteudo">
+        <p>Loja do servidor — as configurações ficam no <a href="admin.html" class="rodape-barra-link">painel do dono</a>.</p>
+        <p>Copyright © 2026 <span id="rodape-nome">GH Roleplay</span></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== Aba de cupom (esquerda) ===== -->
+  <div class="cupom-widget" id="cupom-widget">
+    <button type="button" class="aba aba-esquerda" id="aba-cupom" aria-expanded="false" aria-controls="painel-cupom">
+      <i data-lucide="ticket-percent" aria-hidden="true"></i>
+      <span>CUPOM</span>
+    </button>
+    <div class="aba-painel painel-cupom" id="painel-cupom" hidden>
+      <p class="painel-rotulo"><i data-lucide="ticket-percent" class="size-icon"></i> Cupom disponível</p>
+      <p class="painel-titulo">10% OFF no primeiro pedido</p>
+      <p class="painel-texto">Use o código abaixo no carrinho:</p>
+      <div class="cupom-caixa">
+        <span id="cupom-codigo">PRIMEIRACOMPRA</span>
+        <button type="button" id="btn-copiar-cupom" aria-label="Copiar cupom"><i data-lucide="copy"></i></button>
+      </div>
+      <p class="painel-nota">Válido para pedidos no carrinho.</p>
+    </div>
+  </div>
+
+  <!-- ===== Aba de brinde (direita) ===== -->
+  <div class="brinde-widget" id="brinde-widget">
+    <button type="button" class="aba aba-direita" id="aba-brinde" aria-expanded="false" aria-controls="painel-brinde">
+      <i data-lucide="gift" aria-hidden="true"></i>
+      <span>BRINDE</span>
+    </button>
+    <div class="aba-painel painel-brinde" id="painel-brinde" hidden>
+      <p class="painel-rotulo"><i data-lucide="gift" class="size-icon"></i> Brinde</p>
+      <p class="painel-titulo">Skin exclusiva grátis</p>
+      <p class="painel-texto">Aponte a câmera do celular para o código:</p>
+      <div class="qr-fake" id="qr-fake" aria-label="QR Code demonstrativo"></div>
+      <p class="painel-nota">Este é um QR de demonstração — troque pelo link do seu brinde.</p>
+    </div>
+  </div>
+
+  <!-- Configuração padrão (compartilhada com admin.html) -->
+  <script src="config-base.js"></script>
+  <script src="scripts.js"></script>
+</body>
+</html>

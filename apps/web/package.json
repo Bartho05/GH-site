@@ -1,0 +1,6 @@
+{
+  "name": "@gh-roleplay/web",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Site + painel do dono (HTML/CSS/JS puro), servidos pelo apps/api ou standalone (file://) com fallback local."
+}

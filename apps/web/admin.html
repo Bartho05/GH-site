@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — GH Roleplay</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="admin.css">
+
+  <script src="config-base.js"></script>
+</head>
+<body>
+
+  <!-- ===== Tela de login ===== -->
+  <div id="tela-login" class="tela-login">
+    <form class="card-login" id="form-login">
+      <span class="admin-iniciais" aria-hidden="true">GH</span>
+      <h1>Painel do dono</h1>
+      <p class="login-dica">Configure a loja do <strong id="login-nome">GH Roleplay</strong> sem tocar em código.</p>
+      <div class="campo-com-rotulo">
+        <label for="login-senha">Senha</label>
+        <input type="password" id="login-senha" required placeholder="admin123">
+      </div>
+      <p class="login-erro" id="login-erro" hidden>Senha incorreta.</p>
+      <button type="submit" class="btn btn-laranja btn-total">Entrar</button>
+      <p class="login-nota">Senha inicial: <code>admin123</code> — altere em <strong>Segurança</strong> depois de entrar.</p>
+    </form>
+  </div>
+
+  <!-- ===== Painel ===== -->
+  <div id="app" hidden>
+    <header class="barra-topo">
+      <div class="marcador">
+        <span class="admin-iniciais admin-iniciais-mini" id="barra-iniciais" aria-hidden="true">GH</span>
+        <div>
+          <strong id="barra-nome">GH Roleplay</strong>
+          <small id="modo-conexao">conectando…</small>
+        </div>
+      </div>
+      <div class="barra-acoes">
+        <a class="btn btn-fantasma" href="index.html" target="_blank" rel="noopener"><i data-lucide="external-link"></i> Ver loja</a>
+        <button type="button" class="btn btn-fantasma" id="btn-exportar"><i data-lucide="download"></i> Exportar</button>
+        <button type="button" class="btn btn-fantasma" id="btn-importar"><i data-lucide="upload"></i> Importar</button>
+        <input type="file" id="input-importar" accept="application/json" hidden>
+        <button type="button" class="btn btn-fantasma btn-perigo" id="btn-resetar"><i data-lucide="rotate-ccw"></i> Resetar</button>
+        <button type="button" class="btn btn-laranja" id="btn-salvar"><i data-lucide="save"></i> Salvar tudo</button>
+      </div>
+    </header>
+
+    <div class="corpo-admin">
+      <nav class="lateral" aria-label="Seções do painel">
+        <button type="button" class="aba-lateral ativa" data-secao-btn="geral"><i data-lucide="sliders-horizontal"></i> Geral</button>
+        <button type="button" class="aba-lateral" data-secao-btn="banner"><i data-lucide="megaphone"></i> Banner</button>
+        <button type="button" class="aba-lateral" data-secao-btn="tema"><i data-lucide="palette"></i> Cor</button>
+        <button type="button" class="aba-lateral" data-secao-btn="numeros"><i data-lucide="bar-chart-3"></i> Números</button>
+        <button type="button" class="aba-lateral" data-secao-btn="podio"><i data-lucide="trophy"></i> Pódio</button>
+        <button type="button" class="aba-lateral" data-secao-btn="categorias"><i data-lucide="folder"></i> Categorias</button>
+        <button type="button" class="aba-lateral" data-secao-btn="produtos"><i data-lucide="package"></i> Produtos</button>
+        <button type="button" class="aba-lateral" data-secao-btn="depoimentos"><i data-lucide="message-square"></i> Depoimentos</button>
+        <button type="button" class="aba-lateral" data-secao-btn="links"><i data-lucide="link"></i> Links &amp; redes</button>
+        <button type="button" class="aba-lateral" data-secao-btn="seguranca"><i data-lucide="lock"></i> Segurança</button>
+      </nav>
+
+      <main class="miolo">
+
+        <!-- GERAL -->
+        <section class="secao ativa" data-secao="geral">
+          <h2>Geral</h2>
+          <div class="grade-form">
+            <div class="campo-com-rotulo">
+              <label>Nome da loja</label>
+              <input id="conf-loja" class="campo" placeholder="GH Roleplay">
+            </div>
+            <div class="campo-com-rotulo">
+              <label>Iniciais do logo (até 3 letras)</label>
+              <input id="conf-iniciais" class="campo campo-curto" maxlength="3" placeholder="GH">
+            </div>
+            <div class="campo-com-rotulo">
+              <label>Frase da barra de anúncio <small>use <code>{cod}</code> e <code>{pct}</code></small></label>
+              <input id="conf-anuncio" class="campo" placeholder="UTILIZE O CUPOM {cod} E GARANTA {pct}% OFF ...">
+            </div>
+            <div class="campo-com-rotulo">
+              <label>Código do cupom</label>
+              <input id="conf-cod" class="campo">
+            </div>
+            <div class="campos-em-linha">
+              <div class="campo-com-rotulo">
+                <label>Desconto (%)</label>
+                <input id="conf-desc" type="number" min="1" max="99" class="campo campo-curto">
+              </div>
+              <div class="campo-com-rotulo">
+                <label>Mínimo do pedido (R$)</label>
+                <input id="conf-min" type="number" min="0" step="0.01" class="campo campo-curto">
+              </div>
+            </div>
+            <div class="campo-com-rotulo">
+              <label>Link "Conectar" do servidor</label>
+              <input id="conf-servlink" class="campo" placeholder="https://cfx.re/join/...">
+            </div>
+            <div class="campo-com-rotulo">
+              <label>Jogadores online (número de vitrine)</label>
+              <input id="conf-servjog" type="number" min="0" class="campo campo-curto">
+            </div>
+            <div class="campo-com-rotulo">
+              <label>Formas de pagamento <small>uma por linha</small></label>
+              <textarea id="conf-pag" rows="3" class="campo"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- BANNER -->
+        <section class="secao" data-secao="banner">
+          <h2>Banner</h2>
+          <div class="grade-form">
+            <div class="campo-com-rotulo">
+              <label>Frases do título <small>uma por linha, formato: <code>inicio|destaque</code></small></label>
+              <textarea id="conf-frases" rows="6" class="campo campo-mono"></textarea>
+            </div>
+            <div class="campo-com-rotulo">
+              <label>Pilares (linha sob o título)</label>
+              <input id="conf-pilares" class="campo" placeholder="Competição • Loja • Recompensas">
+            </div>
+          </div>
+        </section>
+
+        <!-- COR -->
+        <section class="secao" data-secao="tema">
+          <h2>Cor da loja</h2>
+          <p class="secao-dica">Cor padrão para quem nunca escolheu. Cada visitante pode mudar a cor em "Ajustes" na própria loja, e a escolha dele é respeitada.</p>
+          <div class="grade-cores">
+            <label class="cor-opcao"><input type="radio" name="conf-tema" value="laranja"><span class="bola cor-laranja"></span>Laranja</label>
+            <label class="cor-opcao"><input type="radio" name="conf-tema" value="rosa"><span class="bola cor-rosa"></span>Rosa neon</label>
+            <label class="cor-opcao"><input type="radio" name="conf-tema" value="verde"><span class="bola cor-verde"></span>Verde</label>
+          </div>
+        </section>
+
+        <!-- NÚMEROS -->
+        <section class="secao" data-secao="numeros">
+          <h2>Números da loja</h2>
+          <p class="secao-dica">Os 4 cartões abaixo do banner, com contagem animada. Campos de cada linha: ícone · prefixo · valor · decimais · rótulo.</p>
+          <div id="lista-numeros" class="empilhador"></div>
+        </section>
+
+        <!-- PÓDIO -->
+        <section class="secao" data-secao="podio">
+          <h2>Pódio dos apoiadores</h2>
+          <p class="secao-dica">Os 3 maiores apoiadores — aparecem no banner e no cabeçalho. Campos: nome · valor em texto livre (ex.: R$ 1.233,45). A ordem das linhas define o lugar no pódio.</p>
+          <div id="lista-podio" class="empilhador"></div>
+        </section>
+
+        <!-- CATEGORIAS -->
+        <section class="secao" data-secao="categorias">
+          <h2>Categorias</h2>
+          <p class="secao-dica">A primeira com "destaque" ganha cor e contagem regressiva (zera à meia-noite). O <strong>id</strong> liga produto à categoria — não altere de produtos já cadastrados. Campos: nome · id · destaque.</p>
+          <div id="lista-categorias" class="empilhador"></div>
+          <button type="button" class="btn btn-fantasma btn-add" data-add-linha="categorias"><i data-lucide="plus"></i> Adicionar categoria</button>
+        </section>
+
+        <!-- PRODUTOS -->
+        <section class="secao" data-secao="produtos">
+          <h2>Produtos</h2>
+          <p class="secao-dica">Preço antigo vazio = sem promoção. Cores = gradiente da capa do card. Campos: categoria · nome · preço · preço antigo · ícone · cor 1 · cor 2 · selo.</p>
+          <div id="lista-produtos" class="empilhador"></div>
+          <button type="button" class="btn btn-fantasma btn-add" data-add-linha="produtos"><i data-lucide="plus"></i> Adicionar produto</button>
+        </section>
+
+        <!-- DEPOIMENTOS -->
+        <section class="secao" data-secao="depoimentos">
+          <h2>Depoimentos</h2>
+          <p class="secao-dica">Campos de cada linha: nome · nota (estrelas) · texto · produto · quando.</p>
+          <div id="lista-depoimentos" class="empilhador"></div>
+          <button type="button" class="btn btn-fantasma btn-add" data-add-linha="depoimentos"><i data-lucide="plus"></i> Adicionar depoimento</button>
+        </section>
+
+        <!-- LINKS -->
+        <section class="secao" data-secao="links">
+          <h2>Links &amp; redes sociais</h2>
+          <p class="secao-dica">Aparecem no painel de suporte e no rodapé. Campos de cada linha: nome · url · ícone.</p>
+          <div id="lista-links" class="empilhador"></div>
+          <button type="button" class="btn btn-fantasma btn-add" data-add-linha="links"><i data-lucide="plus"></i> Adicionar link</button>
+        </section>
+
+        <!-- SEGURANÇA -->
+        <section class="secao" data-secao="seguranca">
+          <h2>Segurança</h2>
+          <p class="secao-dica">A senha do painel fica guardada neste navegador. Para um painel público de verdade é preciso um servidor — este painel é para uso do próprio dono no computador.</p>
+          <div class="grade-form">
+            <div class="campo-com-rotulo"><label>Senha atual</label><input type="password" id="seg-atual" class="campo"></div>
+            <div class="campos-em-linha">
+              <div class="campo-com-rotulo"><label>Nova senha</label><input type="password" id="seg-nova1" class="campo"></div>
+              <div class="campo-com-rotulo"><label>Repetir nova senha</label><input type="password" id="seg-nova2" class="campo"></div>
+            </div>
+            <button type="button" class="btn btn-laranja btn-curta" id="btn-senha"><i data-lucide="key-round"></i> Trocar senha</button>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "@gh-roleplay/api",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Backend Node puro (node:http, zero dependências): serve o site, guarda config/pedidos, autentica o admin.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test test/api.test.js test/validar.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
