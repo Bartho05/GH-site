@@ -11,20 +11,22 @@ import { CONFIG_BASE } from '../config-base.mjs';
 import { mesclar, puxarConfigServidor, API_RAIZ, BRL } from '../lib/util.js';
 import Icone, { CheckSvg } from '../lib/Icone.jsx';
 import { TopoLoja } from './Checkout.jsx';
+import { usarIdioma } from '../lib/i18n.js';
 
 import '../styles.css';
 
 const CONFIG_INICIAL = mesclar(CONFIG_BASE, {});
 
 const ROTULOS_STATUS = {
-  pendente: 'Aguardando pagamento',
-  pago: 'Pagamento confirmado',
-  entregue: 'Entregue no servidor',
-  cancelado: 'Pedido cancelado'
+  pendente: 'aguardando',
+  pago: 'pagoStatus',
+  entregue: 'entregueStatus',
+  cancelado: 'canceladoStatus'
 };
 const ICONES_STATUS = { pendente: 'timer', pago: 'badge-check', entregue: 'package-check', cancelado: 'x' };
 
 export default function Conta() {
+  const { t } = usarIdioma();
   const [cfg, setCfg] = useState(CONFIG_INICIAL);
   const [conta, setConta] = useState(null);      // { tag, pedidos } quando logado
   const [nota, setNota] = useState('');           // mensagem de estado vazio/erro
@@ -42,12 +44,12 @@ export default function Conta() {
     if (!dc) { setCarregando(false); return; }
     try {
       const r = await fetch(API_RAIZ + '/api/minha/conta', { headers: { 'X-Discord-Token': dc } });
-      if (r.status === 404) { limparSessao(); setNota('Sua sessão expirou — entre de novo com o Discord.'); return; }
+      if (r.status === 404) { limparSessao(); setNota(t('sessaoExpirou')); return; }
       if (!r.ok) throw new Error('http ' + r.status);
       setConta(await r.json());
       setNota('');
     } catch (e) {
-      setNota('Sem conexão com o servidor da loja agora.');
+      setNota(t('erroConexao'));
     }
     setCarregando(false);
   }
@@ -61,7 +63,7 @@ export default function Conta() {
       params.delete('dc');
     }
     if (params.get('erro') === 'discord') {
-      setNota('Não foi possível conectar sua conta do Discord. Tente de novo.');
+      setNota(t('erroDiscord'));
       params.delete('erro');
     }
     window.history.replaceState(null, '', '/conta' + (params.toString() ? '?' + params.toString() : ''));
@@ -81,19 +83,18 @@ export default function Conta() {
       <TopoLoja cfg={cfg} />
       <main className="container checkout-miolo">
         <section className="checkout-cartao">
-          <h1 className="checkout-titulo"><Icone nome="user-round" /> Minha conta</h1>
+          <h1 className="checkout-titulo"><Icone nome="user-round" /> {t('minhaConta')}</h1>
           {nota ? <p className="checkout-erro" role="alert"><Icone nome="circle-alert" /> {nota}</p> : null}
 
           {!conta ? (
             <div className="conta-entrar">
               <p className="checkout-dica">
-                <Icone nome="info" /> Entre com o Discord para ver o histórico dos seus pedidos e
-                acompanhar a entrega — sem precisar chamar o suporte.
+                <Icone nome="info" /> {t('contaIntro')}
               </p>
               <a className="btn btn-primario btn-discord" href={API_RAIZ + '/api/auth/discord?volta=conta'}>
-                <Icone nome="message-circle" /> Entrar com o Discord
+                <Icone nome="message-circle" /> {t('entrarDiscord')}
               </a>
-              <Link to="/" className="btn btn-secundario"><Icone nome="arrow-left" /> Voltar à loja</Link>
+              <Link to="/" className="btn btn-secundario"><Icone nome="arrow-left" /> {t('voltarLoja')}</Link>
             </div>
           ) : (
             <>
@@ -102,18 +103,18 @@ export default function Conta() {
                   <Icone nome="message-circle" />
                   <span>{conta.tag}</span>
                 </div>
-                <button type="button" className="btn btn-fantasma" onClick={limparSessao}>
-                  <Icone nome="log-out" /> Sair
+                <button type="button" className="btn btn-secundario" onClick={limparSessao}>
+                  <Icone nome="log-out" /> {t('sair')}
                 </button>
               </div>
 
-              <p className="conta-polling-dica">Atualiza sozinho — deixe a aba aberta para acompanhar a entrega.</p>
+              <p className="conta-polling-dica">{t('contaAtualiza')}</p>
 
-              {carregando ? <p className="checkout-vazio">Carregando pedidos…</p> : null}
+              {carregando ? <p className="checkout-vazio">{t('carregandoPedidos')}</p> : null}
               {!carregando && (!conta.pedidos || !conta.pedidos.length) ? (
                 <p className="checkout-vazio">
                   <Icone nome="shopping-cart" />
-                  Você ainda não fez pedidos. <Link to="/">Escolher produtos</Link>
+                  {t('semPedidosA')} <Link to="/">{t('escolherProdutos')}</Link>
                 </p>
               ) : null}
               <div className="conta-pedidos">
@@ -123,7 +124,7 @@ export default function Conta() {
                       <code className="conta-pedido-codigo">{p.id}</code>
                       <span className="checkout-status-selo" data-status={p.status}>
                         <Icone nome={ICONES_STATUS[p.status] || 'receipt'} />
-                        {ROTULOS_STATUS[p.status] || p.status}
+                        {t(ROTULOS_STATUS[p.status] || 'pedido')}
                       </span>
                       <span className="conta-pedido-quando">{String(p.criadoEm || '').slice(0, 16).replace('T', ' ')}</span>
                       <strong className="conta-pedido-total">{BRL(p.total)}</strong>
@@ -134,10 +135,10 @@ export default function Conta() {
                       ))}
                     </div>
                     {p.status === 'pago' ? (
-                      <p className="conta-pedido-dica"><CheckSvg width={13} height={13} /> Pago — na fila de entrega do servidor.</p>
+                      <p className="conta-pedido-dica"><CheckSvg width={13} height={13} /> {t('naFila')}</p>
                     ) : null}
                     {p.status === 'entregue' ? (
-                      <p className="conta-pedido-dica"><CheckSvg width={13} height={13} /> Entregue — confira no seu personagem in-game.</p>
+                      <p className="conta-pedido-dica"><CheckSvg width={13} height={13} /> {t('entregueOk')}</p>
                     ) : null}
                   </div>
                 ))}

@@ -13,16 +13,29 @@ import {
 } from '../lib/util.js';
 import Icone, { Coroa, FiguraPodio, Estrelas, CheckSvg } from '../lib/Icone.jsx';
 import { Reveal, Contador, useDatilo } from './efeitos.jsx';
+import {
+  usarIdioma, salvarIdioma, IDIOMAS,
+  usarMoeda, salvarMoeda, MOEDAS, formatarPreco,
+  usarCursor, salvarCursor, CURSORES, cssCursor,
+  usarPreferencia
+} from '../lib/i18n.js';
 
 import '../styles.css';
 
 const CONFIG_INICIAL = mesclar(CONFIG_BASE, lerConfigLocal() || {});
 
+/* nomes no estilo ProLeague: DEFAULT / GTA VI / NATAL (o natalino abre 01/12) */
 const TEMAS = [
-  { id: 'laranja', nome: 'LARANJA' },
-  { id: 'rosa', nome: 'ROSA NEON' },
-  { id: 'verde', nome: 'VERDE' }
+  { id: 'laranja', nome: 'DEFAULT' },
+  { id: 'rosa', nome: 'GTA VI' },
+  { id: 'verde', nome: 'NATAL', abreEm: '01/12' }
 ];
+
+/* NATAL fica liberado só em dezembro e janeiro */
+function natalAberto() {
+  const mes = new Date().getMonth(); // 11 = dezembro, 0 = janeiro
+  return mes === 11 || mes === 0;
+}
 
 /* fecha o painel quando o clique vem de fora do elemento */
 function usarFecharFora(ref, aberto, fechar) {
@@ -43,12 +56,12 @@ function BannerConsentimento() {
   const [aceito, setAceito] = useState(() => {
     try { return localStorage.getItem('gh_consentimento') === '1'; } catch (e) { return true; }
   });
+  const { t } = usarIdioma();
   if (aceito) return null;
   return (
     <div className="consentimento" role="region" aria-label="Aviso de cookies e dados">
       <p>
-        Usamos cookies e armazenamento local para lembrar seu tema, seu carrinho e processar
-        pedidos. Detalhes na <Link to="/privacidade">Política de Privacidade</Link>.
+        {t('consentA')} <Link to="/privacidade">{t('privacidade')}</Link>{t('consentB')}
       </p>
       <button
         type="button"
@@ -58,7 +71,7 @@ function BannerConsentimento() {
           setAceito(true);
         }}
       >
-        Aceito
+        {t('aceito')}
       </button>
     </div>
   );
@@ -80,36 +93,38 @@ function BuscaDesktop({ cfg }) {
   const [termo, setTermo] = useState('');
   const [aberta, setAberta] = useState(false);
   const caixaRef = useRef(null);
+  const { t } = usarIdioma();
+  const moeda = usarMoeda();
   usarFecharFora(caixaRef, aberta, () => setAberta(false));
 
-  const t = termo.trim().toLowerCase();
-  const achados = t ? cfg.produtos.filter((p) => p.nome.toLowerCase().includes(t)).slice(0, 7) : [];
+  const termoLimpo = termo.trim().toLowerCase();
+  const achados = termoLimpo ? cfg.produtos.filter((p) => p.nome.toLowerCase().includes(termoLimpo)).slice(0, 7) : [];
 
   const ir = (nome) => { irParaProduto(nome); setTermo(''); setAberta(false); };
 
   return (
     <div className="busca cab-busca" ref={caixaRef}>
       <Icone nome="search" className="busca-icone" aria-hidden="true" />
-      <label htmlFor="campo-busca" className="sr-only">Buscar produto</label>
+      <label htmlFor="campo-busca" className="sr-only">{t('buscar')}</label>
       <input
         id="campo-busca"
         type="search"
         className="busca-campo"
-        placeholder="Buscar produto"
+        placeholder={t('buscar')}
         autoComplete="off"
         value={termo}
         onChange={(e) => { setTermo(e.target.value); setAberta(!!e.target.value.trim()); }}
         onKeyDown={(e) => { if (e.key === 'Enter' && achados.length) ir(achados[0].nome); }}
       />
-      <div className="busca-resultados" role="region" aria-live="polite" hidden={!aberta || !t}>
+      <div className="busca-resultados" role="region" aria-live="polite" hidden={!aberta || !termoLimpo}>
         {achados.length
           ? achados.map((p) => (
             <button type="button" className="busca-item" key={p.nome} onClick={() => ir(p.nome)}>
               <span className="busca-item-figura" style={{ background: `linear-gradient(140deg, ${p.cores[0]}, ${p.cores[1]})` }}><Icone nome={p.icone} /></span>
-              <span><span className="busca-item-nome">{p.nome}</span><br /><span className="busca-item-preco">{BRL(p.preco)}</span></span>
+              <span><span className="busca-item-nome">{p.nome}</span><br /><span className="busca-item-preco">{formatarPreco(p.preco, moeda)}</span></span>
             </button>
           ))
-          : t ? <p className="busca-vazia">Nenhum produto encontrado.</p> : null}
+          : termoLimpo ? <p className="busca-vazia">{t('nadaEncontrado')}</p> : null}
       </div>
     </div>
   );
@@ -121,6 +136,7 @@ function BuscaDesktop({ cfg }) {
 function FaixaCategorias({ cfg }) {
   const trilhoRef = useRef(null);
   const [pos, setPos] = useState({ esq: false, dir: false });
+  const { t } = usarIdioma();
 
   const atualizar = () => {
     const trilho = trilhoRef.current;
@@ -138,14 +154,14 @@ function FaixaCategorias({ cfg }) {
   const rolar = (delta) => trilhoRef.current && trilhoRef.current.scrollBy({ left: delta, behavior: 'smooth' });
 
   return (
-    <nav className="faixa-categorias" aria-label="Categorias">
-      <button type="button" className="cat-seta" aria-label="Ver categorias anteriores" hidden={!pos.esq} onClick={() => rolar(-260)}><Icone nome="chevron-left" /></button>
+    <nav className="faixa-categorias" aria-label={t('rodapeLoja')}>
+      <button type="button" className="cat-seta" aria-label={t('verCategoria')} hidden={!pos.esq} onClick={() => rolar(-260)}><Icone nome="chevron-left" /></button>
       <ul className="cat-trilho" ref={trilhoRef} onScroll={atualizar}>
         {cfg.categorias.map((cat) => (
           <li key={cat.id}><a href={`#secao-${cat.id}`} className="cat-link">{cat.nome}</a></li>
         ))}
       </ul>
-      <button type="button" className="cat-seta" aria-label="Ver mais categorias" hidden={!pos.dir} onClick={() => rolar(260)}><Icone nome="chevron-right" /></button>
+      <button type="button" className="cat-seta" aria-label={t('verCategoria')} hidden={!pos.dir} onClick={() => rolar(260)}><Icone nome="chevron-right" /></button>
     </nav>
   );
 }
@@ -176,6 +192,8 @@ function ContagemRegressiva() {
 function CardProduto({ p, comPromo, idx, onAdd }) {
   const [ok, setOk] = useState(false);
   const [c1, c2] = p.cores || ['#2a2030', '#141118'];
+  const { t } = usarIdioma();
+  const moeda = usarMoeda();
   const desconto = p.precoAntigo ? Math.round((1 - p.preco / p.precoAntigo) * 100) + '% OFF' : null;
 
   const aoAdicionar = () => {
@@ -204,14 +222,14 @@ function CardProduto({ p, comPromo, idx, onAdd }) {
             {p.nome}
           </Link>
         </h3>
-        <p className="produto-meta"><Icone nome="zap" />Entrega instantânea</p>
+        <p className="produto-meta"><Icone nome="zap" />{t('entregaInstantanea')}</p>
         <div className="produto-preco">
-          {p.precoAntigo ? <span className="preco-antigo">{BRL(p.precoAntigo)}</span> : null}
-          <span className="preco-atual">{BRL(p.preco)}</span>
+          {p.precoAntigo ? <span className="preco-antigo">{formatarPreco(p.precoAntigo, moeda)}</span> : null}
+          <span className="preco-atual">{formatarPreco(p.preco, moeda)}</span>
         </div>
         <div className="produto-acoes">
           <button type="button" className={`btn-adicionar${ok ? ' ok' : ''}`} onClick={aoAdicionar}>
-            <Icone nome="shopping-cart" /> Adicionar
+            <Icone nome="shopping-cart" /> {t('adicionar')}
           </button>
         </div>
       </div>
@@ -253,6 +271,15 @@ export default function App() {
   const [animOff, setAnimOff] = useState(document.documentElement.dataset.anim === 'off');
   const [tema, setTema] = useState(document.documentElement.dataset.tema || CONFIG_INICIAL.temaPadrao || 'laranja');
   const [online, setOnline] = useState(CONFIG_INICIAL.servidor.jogadores);
+
+  /* preferências do visitante (painel de ajustes, estilo ProLeague) */
+  const { t } = usarIdioma();
+  const idioma = usarPreferencia('gh_idioma', 'pt'); // re-render quando trocar
+  const moeda = usarMoeda();
+  const cursor = usarCursor();
+
+  /* preço na moeda de referência escolhida (cobrança segue em reais) */
+  const preco = (v) => formatarPreco(v, moeda);
 
   const ajustesRef = useRef(null);
   const suporteRef = useRef(null);
@@ -388,9 +415,9 @@ export default function App() {
     .replaceAll('{pct}', String(cfg.cupom.desconto));
 
   const falta = Math.max(0, cfg.cupom.minimo - soma);
-  const textoProgresso = falta > 0
-    ? `Faltam <strong>${BRL(falta)}</strong> para ${cfg.cupom.desconto}% OFF`
-    : `<strong style="color:hsl(var(--primary))">Cupom liberado!</strong> ${cfg.cupom.desconto}% OFF pronto para usar`;
+  const textoProgressoHtml = falta > 0
+    ? t('faltaCupom', { v: preco(falta), p: String(cfg.cupom.desconto), c: cfg.cupom.codigo || '' })
+    : t('cupomLiberado', { p: String(cfg.cupom.desconto) });
   const barraCupom = cfg.cupom.minimo > 0
     ? (Math.min(soma, cfg.cupom.minimo) / cfg.cupom.minimo * 100)
     : 100;
@@ -399,7 +426,7 @@ export default function App() {
 
   return (
     <>
-      <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
+      <a href="#conteudo" className="skip-link">{t('pular')}</a>
 
       {/* ===== Barra de anúncio ===== */}
       <div id="anuncio" className="anuncio">
@@ -439,7 +466,7 @@ export default function App() {
                 <button
                   type="button"
                   className="btn-icone"
-                  aria-label="Buscar produto"
+                  aria-label={t('buscar')}
                   aria-expanded={buscaMobileAberta}
                   aria-controls="busca-mobile"
                   onClick={alternarBuscaMobile}
@@ -454,38 +481,103 @@ export default function App() {
                   className="btn-icone"
                   aria-haspopup="dialog"
                   aria-expanded={ajustesAberto}
-                  aria-label="Ajustes do site"
+                  aria-label={t('ajustes')}
                   onClick={() => setAjustesAberto(!ajustesAberto)}
                 >
                   <Icone nome="settings" />
                 </button>
                 <div className="painel ajustes-painel" role="dialog" aria-label="Ajustes do site" hidden={!ajustesAberto}>
-                  <p className="painel-secao">Movimento</p>
+                  <p className="painel-secao">{t('movimento')}</p>
                   <button type="button" className="chave" aria-pressed={animOff} onClick={alternarAnim}>
-                    <span className="chave-nome">Reduzir animações</span>
+                    <span className="chave-nome">{t('reduzirAnim')}</span>
                     <span className="chave-trilho" aria-hidden="true"><span className="chave-bolinha"></span></span>
                   </button>
-                  <p className="painel-dica">Desliga a digitação do título e as entradas suaves.</p>
+                  <p className="painel-dica">{t('reduzirAnimDica')}</p>
 
-                  <p className="painel-secao">Cor da loja</p>
-                  <div className="painel-grupo" role="radiogroup" aria-label="Cor da loja">
-                    {TEMAS.map((t) => (
+                  <p className="painel-secao">{t('corLoja')}</p>
+                  <div className="painel-grupo" role="radiogroup" aria-label={t('corLoja')}>
+                    {TEMAS.map((th) => {
+                      const bloqueada = th.abreEm && !natalAberto();
+                      return (
+                        <button
+                          type="button"
+                          role="radio"
+                          className="painel-opcao"
+                          key={th.id}
+                          data-tema-opcao={th.id}
+                          aria-checked={tema === th.id}
+                          disabled={bloqueada}
+                          title={bloqueada ? t('temaBloqueada') : undefined}
+                          onClick={() => escolherTema(th.id)}
+                        >
+                          <span className={`amostra amostra-${th.id}`} aria-hidden="true"></span>
+                          <span className="painel-nome">{th.nome}</span>
+                          {bloqueada ? <span className="tema-cadeado"><Icone nome="lock" />{th.abreEm}</span>
+                            : <Icone nome="check" className="opcao-visto" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="painel-dica">{t('corDica')}</p>
+
+                  <p className="painel-secao">{t('idioma')}</p>
+                  <div className="painel-grupo" role="radiogroup" aria-label={t('idioma')}>
+                    {IDIOMAS.map((i) => (
                       <button
                         type="button"
                         role="radio"
                         className="painel-opcao"
-                        key={t.id}
-                        data-tema-opcao={t.id}
-                        aria-checked={tema === t.id}
-                        onClick={() => escolherTema(t.id)}
+                        key={i.id}
+                        aria-checked={idioma === i.id}
+                        onClick={() => salvarIdioma(i.id)}
                       >
-                        <span className={`amostra amostra-${t.id}`} aria-hidden="true"></span>
-                        <span className="painel-nome">{t.nome}</span>
+                        <span className="painel-bandeira" aria-hidden="true">{i.bandeira}</span>
+                        <span className="painel-nome">{i.nome}</span>
                         <Icone nome="check" className="opcao-visto" />
                       </button>
                     ))}
                   </div>
-                  <p className="painel-dica">A cor vale para todo o site e fica lembrada.</p>
+
+                  <p className="painel-secao">{t('moeda')}</p>
+                  <div className="painel-grupo" role="radiogroup" aria-label={t('moeda')}>
+                    {MOEDAS.map((m) => (
+                      <button
+                        type="button"
+                        role="radio"
+                        className="painel-opcao"
+                        key={m.id}
+                        aria-checked={moeda === m.id}
+                        onClick={() => salvarMoeda(m.id)}
+                      >
+                        <span className="painel-bandeira painel-bandeira-simbolo" aria-hidden="true">{m.simbolo}</span>
+                        <span className="painel-nome">{m.nome}</span>
+                        <Icone nome="check" className="opcao-visto" />
+                      </button>
+                    ))}
+                  </div>
+                  <p className="painel-dica">{t('moedaDica')}</p>
+
+                  <p className="painel-secao">{t('cursor')}</p>
+                  <div className="painel-grupo painel-cursores" role="radiogroup" aria-label={t('cursor')}>
+                    {CURSORES.map((c) => (
+                      <button
+                        type="button"
+                        role="radio"
+                        className={`painel-opcao painel-cursor${c.id !== 'sistema' && c.css ? ' painel-cursor-teste' : ''}`}
+                        key={c.id}
+                        style={c.css ? { cursor: c.css } : undefined}
+                        aria-checked={cursor === c.id}
+                        onClick={() => salvarCursor(c.id)}
+                      >
+                        <span className={`painel-cursor-fig${c.id === 'sistema' ? ' vazia' : ''}`} aria-hidden="true">
+                          {c.id !== 'sistema' ? <span className="painel-cursor-ponteiro" style={c.css ? { cursor: c.css } : undefined}></span> : null}
+                        </span>
+                        <span className="painel-nome">{t(c.chaveNome)}</span>
+                        <Icone nome="check" className="opcao-visto" />
+                      </button>
+                    ))}
+                  </div>
+                  <p className="painel-dica">{t('cursorDica')}</p>
                 </div>
               </li>
 
@@ -495,13 +587,13 @@ export default function App() {
                   className="btn-icone"
                   aria-haspopup="dialog"
                   aria-expanded={suporteAberto}
-                  aria-label="Suporte"
+                  aria-label={t('suporte')}
                   onClick={() => setSuporteAberto(!suporteAberto)}
                 >
                   <Icone nome="headset" />
                 </button>
-                <div className="painel ajustes-painel" role="dialog" aria-label="Canais de atendimento" hidden={!suporteAberto}>
-                  <p className="painel-secao">Canais de atendimento</p>
+                <div className="painel ajustes-painel" role="dialog" aria-label={t('canais')} hidden={!suporteAberto}>
+                  <p className="painel-secao">{t('canais')}</p>
                   <div className="painel-grupo">
                     {cfg.links.map((l, i) => (
                       <a className="painel-opcao" href={l.url} target="_blank" rel="noopener" key={i}>
@@ -510,20 +602,20 @@ export default function App() {
                       </a>
                     ))}
                   </div>
-                  <p className="painel-dica">Resposta em minutos, todos os dias.</p>
+                  <p className="painel-dica">{t('canaisDica')}</p>
                 </div>
               </li>
 
               <li>
-                <Link to="/conta" className="btn btn-secundario btn-entrar" aria-label="Entrar na sua conta">
+                <Link to="/conta" className="btn btn-secundario btn-entrar" aria-label={t('entrar')}>
                   <Icone nome="user" className="btn-icone-expandida" />
-                  <span className="btn-rotulo">Entrar</span>
+                  <span className="btn-rotulo">{t('entrar')}</span>
                 </Link>
               </li>
               <li>
-                <button type="button" className="btn btn-primario" aria-label="Abrir carrinho" onClick={() => setCarrinhoAberto(true)}>
+                <button type="button" className="btn btn-primario" aria-label={t('carrinho')} onClick={() => setCarrinhoAberto(true)}>
                   <Icone nome="shopping-cart" className="btn-icone-expandida" />
-                  <span className="btn-rotulo">Carrinho</span>
+                  <span className="btn-rotulo">{t('carrinho')}</span>
                 </button>
               </li>
             </ul>
@@ -534,13 +626,13 @@ export default function App() {
           {/* Busca mobile */}
           <div className="busca busca-mobile" id="busca-mobile" hidden={!buscaMobileAberta}>
             <Icone nome="search" className="busca-icone" aria-hidden="true" />
-            <label htmlFor="campo-busca-mobile" className="sr-only">Buscar produto</label>
+            <label htmlFor="campo-busca-mobile" className="sr-only">{t('buscar')}</label>
             <input
               ref={buscaMobileRef}
               id="campo-busca-mobile"
               type="search"
               className="busca-campo"
-              placeholder="Buscar produto"
+              placeholder={t('buscar')}
               autoComplete="off"
               value={buscaMobile}
               onChange={(e) => setBuscaMobile(e.target.value)}
@@ -563,8 +655,8 @@ export default function App() {
         <div className="carrinho-sombra" onClick={() => setCarrinhoAberto(false)}></div>
         <aside className="carrinho-caixa">
           <div className="carrinho-topo">
-            <h4 id="carrinho-titulo">Carrinho</h4>
-            <button type="button" className="btn-icone" aria-label="Fechar carrinho" onClick={() => setCarrinhoAberto(false)}>
+            <h4 id="carrinho-titulo">{t('carrinho')}</h4>
+            <button type="button" className="btn-icone" aria-label={t('fecharCarrinho')} onClick={() => setCarrinhoAberto(false)}>
               <Icone nome="x" />
             </button>
           </div>
@@ -573,7 +665,7 @@ export default function App() {
             {unicos.length === 0 ? (
               <div className="carrinho-vazio">
                 <Icone nome="shopping-cart" />
-                Seu carrinho está vazio.<br />Explore o catálogo para começar.
+                {t('carrinhoVazio1')}<br />{t('carrinhoVazio2')}
               </div>
             ) : unicos.map((nome) => {
               const p = cfg.produtos.find((x) => x.nome === nome);
@@ -581,18 +673,22 @@ export default function App() {
               const [c1, c2] = p.cores || ['#2a2030', '#141118'];
               return (
                 <div className="carrinho-item" key={nome}>
-                  <span className="carrinho-item-fig" style={{ '--c1': c1, '--c2': c2 }}><Icone nome={p.icone} /></span>
+                  <span className={`carrinho-item-fig${p.imagem ? ' com-imagem' : ''}`} style={{ '--c1': c1, '--c2': c2 }}>
+                    {p.imagem
+                      ? <img className="carrinho-item-img" src={p.imagem} alt={p.nome} loading="lazy" />
+                      : <Icone nome={p.icone} />}
+                  </span>
                   <div className="carrinho-item-info">
                     <p className="carrinho-item-nome">{p.nome}</p>
                     <div className="carrinho-item-controles">
-                      <button type="button" className="carrinho-qty" aria-label="Menos um" onClick={() => remover(nome)}><Icone nome="minus" /></button>
+                      <button type="button" className="carrinho-qty" aria-label={t('menosUm')} onClick={() => remover(nome)}><Icone nome="minus" /></button>
                       <span className="carrinho-qty-n">{qtdDe(nome)}</span>
-                      <button type="button" className="carrinho-qty" aria-label="Mais um" onClick={() => adicionar(nome)}><Icone nome="plus" /></button>
+                      <button type="button" className="carrinho-qty" aria-label={t('maisUm')} onClick={() => adicionar(nome)}><Icone nome="plus" /></button>
+                      <button type="button" className="carrinho-item-remover" aria-label={t('removerItem')} onClick={() => remover(nome, true)}><Icone nome="x" /></button>
                     </div>
                   </div>
                   <div className="carrinho-item-lado">
-                    <span className="carrinho-item-preco">{BRL(p.preco * qtdDe(nome))}</span>
-                    <button type="button" className="carrinho-item-remover" aria-label="Remover do carrinho" onClick={() => remover(nome, true)}><Icone nome="trash-2" /></button>
+                    <span className="carrinho-item-preco">{preco(p.preco * qtdDe(nome))}</span>
                   </div>
                 </div>
               );
@@ -602,7 +698,7 @@ export default function App() {
           <div className="carrinho-pe">
             <div className="cupom-progresso">
               <div className="cupom-progresso-topo">
-                <p dangerouslySetInnerHTML={{ __html: textoProgresso }} />
+                <p dangerouslySetInnerHTML={{ __html: textoProgressoHtml }} />
                 <Icone nome="ticket-percent" aria-hidden="true" />
               </div>
               <div className="cupom-progresso-trilha">
@@ -610,19 +706,19 @@ export default function App() {
               </div>
             </div>
             <div className="carrinho-total">
-              <span>Total</span>
-              <strong>{BRL(soma)}</strong>
+              <span>{t('total')}</span>
+              <strong>{preco(soma)}</strong>
             </div>
             <Link
               to="/checkout"
               className="btn btn-primario btn-grande"
-              aria-label="Ir para o checkout"
+              aria-label={t('irCheckout')}
               onClick={() => setCarrinhoAberto(false)}
               style={unicos.length === 0 ? { pointerEvents: 'none', opacity: 0.6 } : undefined}
             >
-              <Icone nome="lock" /> Finalizar compra
+              <Icone nome="lock" /> {t('finalizarCompra')}
             </Link>
-            <button type="button" className="carrinho-continuar" onClick={() => setCarrinhoAberto(false)}>Continuar comprando</button>
+            <button type="button" className="carrinho-continuar" onClick={() => setCarrinhoAberto(false)}>{t('continuarComprando')}</button>
           </div>
         </aside>
       </div>
@@ -644,7 +740,7 @@ export default function App() {
           <div className="container hero-grade">
             <div className="hero-texto">
               <h1 className="hero-titulo">
-                <span className="sr-only">Loja para jogadores de elite</span>
+                <span className="sr-only">{t('srHero')}</span>
                 <span className="datilo" aria-hidden="true">
                   <span className="datilo-linha">{tela.inicio}</span>
                   <span className="datilo-cursor" hidden={!tela.mostrar1}></span>
@@ -660,12 +756,12 @@ export default function App() {
                   <span className="servidor-online">
                     <span className="servidor-ponto" aria-hidden="true"></span>
                     <strong>{online}</strong>
-                    <span>jogadores online agora</span>
+                    <span>{t('onlineAgora')}</span>
                   </span>
-                  <span className="servidor-conectar">Conectar <Icone nome="arrow-up-right" /></span>
+                  <span className="servidor-conectar">{t('conectar')} <Icone nome="arrow-up-right" /></span>
                 </a>
                 <a href="#store" className="btn btn-primario btn-grande">
-                  <Icone nome="arrow-down" /> Explorar produtos
+                  <Icone nome="arrow-down" /> {t('explorar')}
                 </a>
               </div>
             </div>
@@ -673,7 +769,7 @@ export default function App() {
             {/* Pódio: os 3 maiores apoiadores */}
             <div className="podio-palco">
               <span className="podio-estilhaços" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-              <ol className="banner-podio" id="podio" aria-label="Maiores apoiadores da loja">
+              <ol className="banner-podio" id="podio" aria-label={t('podioLabel')}>
                 {cfg.podio.slice(0, 3).map((p, i) => (
                   <Reveal tag="li" className="podio-lugar" key={p.nome + i} data-posicao={String(i + 1)} delay={0.15 + i * 0.08}>
                     <span className="podio-figura">
@@ -693,20 +789,20 @@ export default function App() {
           <div className="hero-pagamentos">
             <div className="container hero-pay-conteudo">
               <div className="pay-esquerda">
-                <span className="pay-pagamento-seguro"><Icone nome="shield-check" /> Pagamento seguro</span>
+                <span className="pay-pagamento-seguro"><Icone nome="shield-check" /> {t('pagSeguro')}</span>
                 <span className="pay-chips">
                   {cfg.pagamentos.map((nome) => (
                     <span className="pay-chip" key={nome}><Icone nome="circle-check" />{nome}</span>
                   ))}
                 </span>
               </div>
-              <a href="#store" className="pay-ver-catalogo">Ver o catálogo <Icone nome="arrow-down" /></a>
+              <a href="#store" className="pay-ver-catalogo">{t('verCatalogo')} <Icone nome="arrow-down" /></a>
             </div>
           </div>
         </section>
 
         {/* ===== Números da loja ===== */}
-        <section className="container numeros" id="numeros" aria-label="A loja em números">
+        <section className="container numeros" id="numeros" aria-label={t('podioLabel')}>
           {cfg.numeros.map((n, i) => (
             <Reveal className="numero-card" key={i}>
               <Icone nome={n.icone} className="numero-icone" aria-hidden="true" />
@@ -735,10 +831,10 @@ export default function App() {
                   <Reveal className="cat-cabeca">
                     <span className="cat-cabeca-traco" aria-hidden="true"></span>
                     <h3 className="cat-cabeca-titulo">{cat.nome}</h3>
-                    <span className="cat-cabeca-qtd">{itens.length}<span className="sr-only"> produtos</span></span>
+                    <span className="cat-cabeca-qtd">{itens.length}<span className="sr-only"> {t('produtosPalavra')}</span></span>
                     <span className="cat-cabeca-linha" aria-hidden="true"></span>
-                    <a href={`#secao-${cat.id}`} className="cat-cabeca-ver" aria-label={`Ver categoria ${cat.nome}`}>
-                      <span>Ver categoria</span>
+                    <a href={`#secao-${cat.id}`} className="cat-cabeca-ver" aria-label={`${t('verCategoria')} ${cat.nome}`}>
+                      <span>{t('verCategoria')}</span>
                       <Icone nome="arrow-right" />
                     </a>
                   </Reveal>
@@ -755,7 +851,7 @@ export default function App() {
 
         {/* ===== Depoimentos ===== */}
         <section className="container depoimentos" id="depoimentos" aria-labelledby="depoimentos-titulo">
-          <h2 className="secao-titulo" id="depoimentos-titulo">Depoimentos de clientes</h2>
+          <h2 className="secao-titulo" id="depoimentos-titulo">{t('depoimentosTitulo')}</h2>
           <div className="depoimentos-faixa">
             <div className="depoimentos-trilho">
               {cfg.depoimentos.map((d, i) => (
@@ -765,7 +861,7 @@ export default function App() {
                     <span className="depoimento-avatar" aria-hidden="true">{d.nome.slice(0, 2).toUpperCase()}</span>
                     <div>
                       <p className="depoimento-nome">{d.nome}</p>
-                      <div className="depoimento-estrelas" role="img" aria-label={`${d.nota} de 5 estrelas`}><Estrelas nota={d.nota} /></div>
+                      <div className="depoimento-estrelas" role="img" aria-label={t('estrelasAria', { n: String(d.nota) })}><Estrelas nota={d.nota} /></div>
                     </div>
                   </div>
                   <p className="depoimento-texto">{d.texto}</p>
@@ -791,23 +887,23 @@ export default function App() {
               <span className="marca-logo" aria-hidden="true">{cfg.logoIniciais}</span>
               <span className="rodape-marca-nome">{cfg.loja}</span>
             </Link>
-            <p className="rodape-descricao">Aqui você apoia o servidor: os recursos vão para a infraestrutura, melhorias e para as novidades do jogo.</p>
+            <p className="rodape-descricao">{t('rodapeDescricao')}</p>
           </div>
-          <nav className="rodape-coluna" aria-label="Loja">
-            <p className="rodape-titulo">Loja</p>
-            <a href="#store">Catálogo</a>
-            <a href="#podio">Ranking</a>
-            <button type="button" onClick={() => setCarrinhoAberto(true)}>Carrinho</button>
+          <nav className="rodape-coluna" aria-label={t('rodapeLoja')}>
+            <p className="rodape-titulo">{t('rodapeLoja')}</p>
+            <a href="#store">{t('catalogo')}</a>
+            <a href="#podio">{t('ranking')}</a>
+            <button type="button" onClick={() => setCarrinhoAberto(true)}>{t('carrinho')}</button>
           </nav>
-          <nav className="rodape-coluna" aria-label="Ajuda">
-            <p className="rodape-titulo">Ajuda</p>
-            <a href="#termos">Termos e condições</a>
-            <Link to="/privacidade">Política de Privacidade</Link>
-            <a href="#contato">Contato</a>
-            <Link to="/admin">Painel do dono</Link>
+          <nav className="rodape-coluna" aria-label={t('rodapeAjuda')}>
+            <p className="rodape-titulo">{t('rodapeAjuda')}</p>
+            <Link to="/terms">{t('termos')}</Link>
+            <Link to="/privacidade">{t('privacidade')}</Link>
+            <a href="#contato">{t('contato')}</a>
+            <Link to="/admin">{t('painelDono')}</Link>
           </nav>
           <div className="rodape-coluna">
-            <p className="rodape-titulo">Comunidade</p>
+            <p className="rodape-titulo">{t('rodapeComunidade')}</p>
             <div className="rodape-redes">
               {cfg.links.map((l, i) => (
                 <a className="rede-social" href={l.url} target="_blank" rel="noopener" aria-label={l.nome} title={l.nome} key={i}>
@@ -819,7 +915,7 @@ export default function App() {
         </div>
         <div className="rodape-barra">
           <div className="container rodape-barra-conteudo">
-            <p>Loja do servidor — as configurações ficam no <Link to="/admin" className="rodape-barra-link">painel do dono</Link>.</p>
+            <p>{t('rodapeNotaA')} <Link to="/admin" className="rodape-barra-link">{t('painelDono')}</Link>{t('rodapeNotaB')}</p>
             <p>Copyright © 2026 {cfg.loja}</p>
           </div>
         </div>
@@ -838,19 +934,19 @@ export default function App() {
           onClick={() => { setAbaBrinde(false); setAbaCupom(!abaCupom); }}
         >
           <Icone nome="ticket-percent" aria-hidden="true" />
-          <span>CUPOM</span>
+          <span>{t('cupomWidget')}</span>
         </button>
         <div className="aba-painel painel-cupom" id="painel-cupom" hidden={!abaCupom}>
-          <p className="painel-rotulo"><Icone nome="ticket-percent" className="size-icon" /> Cupom disponível</p>
-          <p className="painel-titulo">{cfg.cupom.desconto}% OFF no primeiro pedido</p>
-          <p className="painel-texto">Use o código abaixo no carrinho:</p>
+          <p className="painel-rotulo"><Icone nome="ticket-percent" className="size-icon" /> {t('cupomDisponivel')}</p>
+          <p className="painel-titulo">{t('cupomTitulo', { p: String(cfg.cupom.desconto) })}</p>
+          <p className="painel-texto">{t('cupomUse')}</p>
           <div className="cupom-caixa">
             <span>{cfg.cupom.codigo}</span>
-            <button type="button" className={copiado ? 'copiado' : ''} aria-label="Copiar cupom" onClick={copiarCupom}>
+            <button type="button" className={copiado ? 'copiado' : ''} aria-label={t('copiarCupom')} onClick={copiarCupom}>
               {copiado ? <CheckSvg width={16} height={16} /> : <Icone nome="copy" />}
             </button>
           </div>
-          <p className="painel-nota">Válido para pedidos no carrinho.</p>
+          <p className="painel-nota">{t('cupomValido')}</p>
         </div>
       </div>
 
@@ -864,14 +960,14 @@ export default function App() {
           onClick={() => { setAbaCupom(false); setAbaBrinde(!abaBrinde); }}
         >
           <Icone nome="gift" aria-hidden="true" />
-          <span>BRINDE</span>
+          <span>{t('brinde')}</span>
         </button>
         <div className="aba-painel painel-brinde" id="painel-brinde" hidden={!abaBrinde}>
-          <p className="painel-rotulo"><Icone nome="gift" className="size-icon" /> Brinde</p>
-          <p className="painel-titulo">Skin exclusiva grátis</p>
-          <p className="painel-texto">Aponte a câmera do celular para o código:</p>
+          <p className="painel-rotulo"><Icone nome="gift" className="size-icon" /> {t('brinde')}</p>
+          <p className="painel-titulo">{t('brindeTitulo')}</p>
+          <p className="painel-texto">{t('brindeUse')}</p>
           <QrFake />
-          <p className="painel-nota">Este é um QR de demonstração — troque pelo link do seu brinde.</p>
+          <p className="painel-nota">{t('brindeNota')}</p>
         </div>
       </div>
     </>

@@ -20,6 +20,9 @@ npm install       # uma vez (liga os workspaces)
 npm start         # builda o frontend (se preciso) e sobe tudo:
                   # loja:    http://localhost:8123
                   # checkout: http://localhost:8123/checkout
+                  # conta:   http://localhost:8123/conta (login Discord)
+                  # produto: http://localhost:8123/produto/:slug
+                  # termos:  http://localhost:8123/terms
                   # painel:  http://localhost:8123/admin  (rota da SPA)
                   # api:     http://localhost:8123/api/health
 npm run dev       # desenvolvimento: Vite com hot-reload (5173) + API (8123, proxy /api)
@@ -78,9 +81,20 @@ Painel em **`/admin`** (rota da SPA — o endereço antigo `/admin.html` redirec
 
 ## Conta do cliente e página de produto
 
-- **`/conta`** — o cliente entra com o Discord e vê o histórico dos próprios pedidos (status ao vivo por polling de 10s).
+- **`/conta`** — o cliente entra com o Discord e vê o histórico dos próprios pedidos (status ao vivo por polling de 10s). `/login` redireciona para cá.
 - **`/produto/:slug`** — página do produto com foto real, descrição e quantidade (o card da vitrine liga pra ela).
+- **`/terms`** — Termos e condições; **`/privacidade`** — LGPD; **`/404`** — página dedicada para endereço inexistente.
 - Foto e descrição são cadastrados pelo painel, aba *Produtos* — opcionais; sem foto, o card usa o ícone/gradiente.
+
+## Ajustes do visitante (estilo ProLeague)
+
+No ícone de engrenagem do cabeçalho, o visitante escolhe (guardado no navegador):
+
+- **Reduzir animações** — desliga a digitação do título e as entradas suaves;
+- **Cor da loja** — DEFAULT / GTA VI / NATAL (o tema natalino fica com cadeado até 01/12);
+- **Idioma** — Português, English, Español, Italiano (interface; produtos seguem o que o dono cadastrou);
+- **Moeda** — Real / Dólar / Euro / Libra com valor aproximado — a cobrança é sempre em reais;
+- **Cursor** — padrão do sistema, mira (crosshair) ou ponto, com pré-visualização ao passar o mouse.
 
 ## Entrega automática (FiveM)
 

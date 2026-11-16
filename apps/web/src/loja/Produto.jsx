@@ -7,9 +7,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { CONFIG_BASE } from '../config-base.mjs';
-import { mesclar, puxarConfigServidor, BRL, slugProduto } from '../lib/util.js';
+import { mesclar, puxarConfigServidor, slugProduto } from '../lib/util.js';
 import Icone from '../lib/Icone.jsx';
 import { TopoLoja } from './Checkout.jsx';
+import { usarIdioma, usarMoeda, formatarPreco } from '../lib/i18n.js';
 
 import '../styles.css';
 
@@ -26,6 +27,9 @@ function lerCarrinho() {
 export default function Produto() {
   const { slug } = useParams();
   const navegar = useNavigate();
+  const { t } = usarIdioma();
+  const moeda = usarMoeda();
+  const preco = (v) => formatarPreco(v, moeda);
   const [cfg, setCfg] = useState(CONFIG_INICIAL);
   const [quantidade, setQuantidade] = useState(1);
   const [adicionado, setAdicionado] = useState(false);
@@ -45,9 +49,9 @@ export default function Produto() {
         <TopoLoja cfg={cfg} />
         <main className="container checkout-miolo">
           <section className="checkout-cartao">
-            <h1 className="checkout-titulo"><Icone nome="circle-alert" /> Produto não encontrado</h1>
-            <p className="checkout-dica"><Icone nome="info" /> Esse produto não existe mais na loja — a vitrine mudou.</p>
-            <Link to="/" className="btn btn-secundario"><Icone nome="arrow-left" /> Voltar à loja</Link>
+            <h1 className="checkout-titulo"><Icone nome="circle-alert" /> {t('produtoNaoEncontrado')}</h1>
+            <p className="checkout-dica"><Icone nome="info" /> {t('produtoSumiu')}</p>
+            <Link to="/" className="btn btn-secundario"><Icone nome="arrow-left" /> {t('voltarLoja')}</Link>
           </section>
         </main>
       </div>
@@ -73,8 +77,8 @@ export default function Produto() {
     <div className="checkout-pagina">
       <TopoLoja cfg={cfg} />
       <main className="container checkout-miolo">
-        <nav className="produto-caminho" aria-label="Trilha">
-          <Link to="/">Loja</Link>
+        <nav className="produto-caminho" aria-label="Breadcrumb">
+          <Link to="/">{t('rodapeLoja')}</Link>
           {categoria ? <><Icone nome="chevron-right" /><Link to={'/#' + categoria.id}>{categoria.nome}</Link></> : null}
           <Icone nome="chevron-right" /><span aria-current="page">{p.nome}</span>
         </nav>
@@ -94,42 +98,42 @@ export default function Produto() {
             {categoria ? <p className="produto-detalhe-cat">{categoria.nome}</p> : null}
             {p.descricao ? <p className="produto-detalhe-desc">{p.descricao}</p> : null}
 
-            <p className="produto-meta"><Icone nome="zap" />Entrega instantânea no servidor</p>
+            <p className="produto-meta"><Icone nome="zap" />{t('entregaInstantaneaLonga')}</p>
 
             <div className="produto-preco produto-detalhe-preco">
-              {p.precoAntigo ? <span className="preco-antigo">{BRL(p.precoAntigo)}</span> : null}
-              <span className="preco-atual">{BRL(p.preco)}</span>
+              {p.precoAntigo ? <span className="preco-antigo">{preco(p.precoAntigo)}</span> : null}
+              <span className="preco-atual">{preco(p.preco)}</span>
               {desconto ? <span className="marca-desconto">{desconto}</span> : null}
             </div>
 
             <div className="produto-detalhe-acoes">
-              <div className="produto-qtd" role="group" aria-label="Quantidade">
-                <button type="button" onClick={() => setQuantidade((q) => Math.max(1, q - 1))} aria-label="Menos uma unidade">−</button>
+              <div className="produto-qtd" role="group" aria-label={t('quantidade')}>
+                <button type="button" onClick={() => setQuantidade((q) => Math.max(1, q - 1))} aria-label={t('menosUma')}>−</button>
                 <span aria-live="polite">{quantidade}</span>
-                <button type="button" onClick={() => setQuantidade((q) => Math.min(99, q + 1))} aria-label="Mais uma unidade">+</button>
+                <button type="button" onClick={() => setQuantidade((q) => Math.min(99, q + 1))} aria-label={t('maisUma')}>+</button>
               </div>
               <button type="button" className="btn btn-secundario" onClick={adicionar}>
-                {adicionado ? <><Icone nome="check" /> Adicionado!</> : <><Icone nome="shopping-cart" /> Adicionar</>}
+                {adicionado ? <><Icone nome="check" /> {t('adicionado')}</> : <><Icone nome="shopping-cart" /> {t('adicionar')}</>}
               </button>
               <button type="button" className="btn btn-primario" onClick={() => { adicionar(); navegar('/checkout'); }}>
-                <Icone nome="zap" /> Comprar agora
+                <Icone nome="zap" /> {t('comprarAgora')}
               </button>
             </div>
 
             <p className="produto-detalhe-carrinho">
               {noCarrinho ? (
                 <>
-                  <Icone nome="shopping-cart" /> {noCarrinho} no carrinho —
-                  <Link to="/checkout"> finalizar compra</Link>
+                  <Icone nome="shopping-cart" /> {noCarrinho} {t('noCarrinho')} —
+                  <Link to="/checkout">{t('finalizarCompra')}</Link>
                 </>
               ) : (
-                <><Icone nome="shield-check" /> Pagamento via Pix · entrega automática</>
+                <><Icone nome="shield-check" /> {t('pixEntrega')}</>
               )}
             </p>
           </div>
         </section>
 
-        <p className="produto-detalhe-voltar"><Link to="/" className="btn btn-secundario"><Icone nome="arrow-left" /> Voltar à loja</Link></p>
+        <p className="produto-detalhe-voltar"><Link to="/" className="btn btn-secundario"><Icone nome="arrow-left" /> {t('voltarLoja')}</Link></p>
       </main>
     </div>
   );

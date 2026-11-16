@@ -13,6 +13,7 @@ import {
   mesclar, puxarConfigServidor, API_RAIZ, BRL
 } from '../lib/util.js';
 import Icone, { CheckSvg } from '../lib/Icone.jsx';
+import { usarIdioma, usarMoeda } from '../lib/i18n.js';
 
 import '../styles.css';
 
@@ -35,6 +36,8 @@ function lerCarrinho() {
    ============================================= */
 export default function Checkout() {
   const navegar = useNavigate();
+  const { t } = usarIdioma();
+  const moeda = usarMoeda(); // só para a nota de cobrança — os valores aqui são em reais
   const [cfg, setCfg] = useState(CONFIG_INICIAL);
   const [itens, setItens] = useState(lerCarrinho);
   const [playerId, setPlayerId] = useState('');
@@ -54,7 +57,7 @@ export default function Checkout() {
       params.delete('dc');
     }
     if (params.get('erro') === 'discord') {
-      setErro('Não foi possível conectar sua conta do Discord. Tente de novo.');
+      setErro(t('erroDiscord'));
       params.delete('erro');
     }
     window.history.replaceState(null, '', '/checkout' + (params.toString() ? '?' + params.toString() : ''));
@@ -127,7 +130,7 @@ export default function Checkout() {
     if (!linhas.length || enviando) return;
     const idLimpo = playerId.trim();
     if (!validarId(idLimpo)) {
-      setErro('Informe seu ID no servidor (só letras, números, _ ou -).');
+      setErro(t('erroId'));
       return;
     }
     setEnviando(true);
@@ -156,10 +159,10 @@ export default function Checkout() {
         setResultado(dados);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        setErro((dados && dados.erro) || 'Não foi possível criar o pedido. Tente de novo.');
+        setErro((dados && dados.erro) || t('erroPedido'));
       }
     } catch (e) {
-      setErro('Sem conexão com o servidor da loja.');
+      setErro(t('erroConexao'));
     }
     setEnviando(false);
   }
@@ -174,36 +177,35 @@ export default function Checkout() {
           <section className="checkout-cartao checkout-confirmacao">
             <span className="checkout-status-selo" data-status={pedido.status}>
               <Icone nome={pedido.status === 'cancelado' ? 'x' : 'receipt'} />
-              {pedido.status === 'pendente' && 'Aguardando pagamento'}
-              {pedido.status === 'pago' && 'Pagamento confirmado'}
-              {pedido.status === 'entregue' && 'Entregue no servidor'}
-              {pedido.status === 'cancelado' && 'Pedido cancelado'}
+              {pedido.status === 'pendente' && t('aguardando')}
+              {pedido.status === 'pago' && t('pagoStatus')}
+              {pedido.status === 'entregue' && t('entregueStatus')}
+              {pedido.status === 'cancelado' && t('canceladoStatus')}
             </span>
-            <h1 className="checkout-titulo">Pedido <code>{pedido.id}</code></h1>
+            <h1 className="checkout-titulo">{t('pedido')} <code>{pedido.id}</code></h1>
             <p className="checkout-total-linha">
-              Total <strong>{BRL(pedido.total)}</strong>
-              {descontoPct ? <span> · {descontoPct}% OFF aplicado</span> : null}
+              {t('total')} <strong>{BRL(pedido.total)}</strong>
+              {descontoPct ? <span> · {t('offAplicado', { p: String(descontoPct) })}</span> : null}
             </p>
 
             {pedido.status === 'pendente' && (
               <p className="checkout-status-dica">
-                Esta página atualiza sozinha — deixe-a aberta. Assim que o pagamento for
-                confirmado, a entrega cai direto no servidor.
+                {t('dicaPendente')}
               </p>
             )}
             {pedido.status === 'pago' && (
               <p className="checkout-status-dica ok">
-                <CheckSvg width={15} height={15} /> Pagamento confirmado! Sua entrega já está na fila do servidor.
+                <CheckSvg width={15} height={15} /> {t('dicaPago')}
               </p>
             )}
             {pedido.status === 'entregue' && (
               <p className="checkout-status-dica ok">
-                <CheckSvg width={15} height={15} /> Entrega concluída — confira os itens no seu personagem in-game.
+                <CheckSvg width={15} height={15} /> {t('dicaEntregue')}
               </p>
             )}
             {pedido.status === 'cancelado' && (
               <p className="checkout-status-dica ruim">
-                Pedido cancelado pela staff. Se pagou por engano, fale com o suporte.
+                {t('dicaCancelado')}
               </p>
             )}
 
@@ -211,7 +213,7 @@ export default function Checkout() {
               <div className="checkout-pix">
                 {pix ? (
                   <>
-                    <p className="checkout-pix-rotulo"><Icone nome="qr-code" /> Pix automático — Mercado Pago</p>
+                    <p className="checkout-pix-rotulo"><Icone nome="qr-code" /> {t('pixAuto')}</p>
                     {pix.qrBase64 ? (
                       <img
                         className="checkout-pix-qr"
@@ -225,26 +227,26 @@ export default function Checkout() {
                       <button
                         type="button"
                         className={copiado === 'copia' ? 'copiado' : ''}
-                        aria-label="Copiar código Pix"
+                        aria-label={t('copiarCodigoPix')}
                         onClick={() => copiar(pix.copiaECola, 'copia')}
                       >
                         {copiado === 'copia' ? <CheckSvg width={16} height={16} /> : <Icone nome="copy" />}
                       </button>
                     </div>
                     <p className="checkout-pix-nota">
-                      Copie o código, pague no app do seu banco e a confirmação é automática.
+                      {t('pixCopiaDica')}
                     </p>
                   </>
                 ) : manual && manual.chavePix ? (
                   <>
-                    <p className="checkout-pix-rotulo"><Icone nome="qr-code" /> Pix — pagamento manual</p>
+                    <p className="checkout-pix-rotulo"><Icone nome="qr-code" /> {t('pixManual')}</p>
                     <div className="checkout-pix-codigo">
                       <span className="checkout-pix-tipo">{ROTULO_TIPO_PIX[manual.tipoChavePix] || 'Chave Pix'}</span>
                       <span className="checkout-pix-chave">{manual.chavePix}</span>
                       <button
                         type="button"
                         className={copiado === 'chave' ? 'copiado' : ''}
-                        aria-label="Copiar chave Pix"
+                        aria-label={t('copiarChavePix')}
                         onClick={() => copiar(manual.chavePix, 'chave')}
                       >
                         {copiado === 'chave' ? <CheckSvg width={16} height={16} /> : <Icone nome="copy" />}
@@ -255,7 +257,7 @@ export default function Checkout() {
                       <button
                         type="button"
                         className={copiado === 'valor' ? 'copiado' : ''}
-                        aria-label="Copiar valor"
+                        aria-label={t('copiarValor')}
                         onClick={() => copiar(pedido.total.toFixed(2).replace('.', ','), 'valor')}
                       >
                         {copiado === 'valor' ? <CheckSvg width={16} height={16} /> : <Icone nome="copy" />}
@@ -264,10 +266,7 @@ export default function Checkout() {
                     {manual.instrucoesPix ? <p className="checkout-pix-nota">{manual.instrucoesPix}</p> : null}
                   </>
                 ) : (
-                  <p className="checkout-pix-nota">
-                    Pague o valor exato com o Pix informado pela staff no Discord da loja.
-                    Depois de confirmado, o status aqui muda para <strong>pago</strong>.
-                  </p>
+                  <p className="checkout-pix-nota" dangerouslySetInnerHTML={{ __html: t('pixFaltaStaff') }} />
                 )}
               </div>
             )}
@@ -291,14 +290,14 @@ export default function Checkout() {
       <TopoLoja cfg={cfg} />
       <main className="container checkout-miolo">
         <section className="checkout-cartao">
-          <h1 className="checkout-titulo"><Icone nome="lock" /> Finalizar compra</h1>
+          <h1 className="checkout-titulo"><Icone nome="lock" /> {t('checkoutTitulo')}</h1>
 
           {erro ? <p className="checkout-erro" role="alert"><Icone nome="circle-alert" /> {erro}</p> : null}
 
           <div className="checkout-grid">
             <div className="checkout-form">
               <div className="campo-com-rotulo">
-                <label htmlFor="checkout-player">Seu ID no servidor <small>aparece na lista de jogadores (TAB)</small></label>
+                <label htmlFor="checkout-player">{t('idServidor')} <small>{t('idServidorDica')}</small></label>
                 <input
                   id="checkout-player"
                   className="campo"
@@ -312,25 +311,25 @@ export default function Checkout() {
 
               {cfg.recursos && cfg.recursos.discordLogin ? (
                 <div className="campo-com-rotulo">
-                  <label>Conta Discord <small>usada para avisos e conferência da staff</small></label>
+                  <label>{t('contaDiscord')} <small>{t('contaDiscordDica')}</small></label>
                   {discord ? (
                     <div className="checkout-discord-ok">
                       <Icone nome="message-circle" />
                       <span>{discord.tag}</span>
-                      <button type="button" onClick={sairDiscord}>trocar</button>
+                      <button type="button" onClick={sairDiscord}>{t('trocar')}</button>
                     </div>
                   ) : (
                     <a className="btn btn-secundario btn-discord" href={API_RAIZ + '/api/auth/discord'}>
-                      <Icone nome="message-circle" /> Entrar com o Discord
+                      <Icone nome="message-circle" /> {t('entrarDiscord')}
                     </a>
                   )}
                 </div>
               ) : (
-                <p className="checkout-dica"><Icone nome="info" /> Login com Discord ainda não está ativo nesta loja — a staff confere seu ID no servidor.</p>
+                <p className="checkout-dica"><Icone nome="info" /> {t('semDiscord')}</p>
               )}
 
               <div className="campo-com-rotulo">
-                <label htmlFor="checkout-cupom">Cupom <small>{cfg.cupom.desconto}% OFF a partir de {BRL(cfg.cupom.minimo)}</small></label>
+                <label htmlFor="checkout-cupom">{t('cupom')} <small>{t('cupomDica', { p: String(cfg.cupom.desconto), v: BRL(cfg.cupom.minimo) })}</small></label>
                 <input
                   id="checkout-cupom"
                   className="campo campo-curto"
@@ -342,13 +341,12 @@ export default function Checkout() {
               </div>
 
               <p className="checkout-dica">
-                <Icone nome="shield-check" /> Seus dados ficam só no servidor da loja — nada é
-                compartilhado. Veja a <Link to="/privacidade">Política de Privacidade</Link>.
+                <Icone nome="shield-check" /> {t('privDicaA')} <Link to="/privacidade">{t('privacidade')}</Link>{t('privDicaB')}
               </p>
             </div>
 
             <aside className="checkout-resumo">
-              <h2>Resumo do pedido</h2>
+              <h2>{t('resumoPedido')}</h2>
               {linhas.length ? linhas.map((l) => (
                 <div className="checkout-linha" key={l.p.nome}>
                   <span>{l.p.nome} <em>× {l.quantidade}</em></span>
@@ -357,20 +355,20 @@ export default function Checkout() {
               )) : (
                 <p className="checkout-vazio">
                   <Icone nome="shopping-cart" />
-                  Carrinho vazio. <Link to="/">Escolher produtos</Link>
+                  {t('carrinhoVazioCurto')} <Link to="/">{t('escolherProdutos')}</Link>
                 </p>
               )}
               <div className="checkout-linha checkout-subtotal">
-                <span>Subtotal</span><span>{BRL(subtotal)}</span>
+                <span>{t('subtotal')}</span><span>{BRL(subtotal)}</span>
               </div>
               {descontoPct ? (
                 <div className="checkout-linha checkout-desconto">
-                  <span>Cupom {cfg.cupom.codigo}</span>
+                  <span>{t('descontoCupom', { c: cfg.cupom.codigo })}</span>
                   <span>−{BRL(subtotal * descontoPct / 100)}</span>
                 </div>
               ) : null}
               <div className="checkout-linha checkout-total">
-                <span>Total</span><strong>{BRL(total)}</strong>
+                <span>{t('total')}</span><strong>{BRL(total)}</strong>
               </div>
               <button
                 type="button"
@@ -378,13 +376,14 @@ export default function Checkout() {
                 disabled={enviando || !linhas.length}
                 onClick={enviarPedido}
               >
-                {enviando ? 'Criando pedido…' : (<><Icone nome="shopping-cart" /> Confirmar pedido</>)}
+                {enviando ? t('criandoPedido') : (<><Icone nome="shopping-cart" /> {t('confirmarPedido')}</>)}
               </button>
+              {moeda !== 'brl' ? <p className="checkout-nota-cobranca">{t('cobrancaBrl')}</p> : null}
               <p className="checkout-nota-pagamento">
                 <Icone nome="qr-code" />
                 {cfg.recursos && cfg.recursos.pixAutomatico
-                  ? 'Pix gerado na hora pelo Mercado Pago — confirmação automática.'
-                  : 'Pagamento via Pix — a staff confirma em minutos.'}
+                  ? t('pixNotaAuto')
+                  : t('pixNotaManual')}
               </p>
             </aside>
           </div>
@@ -398,6 +397,7 @@ export default function Checkout() {
    Cabeçalho enxuto (compartilhado com /conta)
    ============================================= */
 export function TopoLoja({ cfg }) {
+  const { t } = usarIdioma();
   return (
     <header className="checkout-topo">
       <div className="container checkout-topo-linha">
@@ -405,7 +405,7 @@ export function TopoLoja({ cfg }) {
           <span className="marca-logo" aria-hidden="true">{cfg.logoIniciais}</span>
           <span className="marca-nome"><span className="marca-titulo">{cfg.loja}</span></span>
         </Link>
-        <Link to="/" className="checkout-voltar"><Icone nome="arrow-left" /> Continuar comprando</Link>
+        <Link to="/" className="checkout-voltar"><Icone nome="arrow-left" /> {t('continuarComprando')}</Link>
       </div>
     </header>
   );

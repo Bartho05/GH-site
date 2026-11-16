@@ -14,7 +14,7 @@
   <!-- App (React via Vite) -->
   <script type="module" src="/src/main.jsx"></script>
 
-  <!-- Tema salvo aplicado antes da pintura (evita troca de cor piscando) -->
+  <!-- Tema/idioma/moeda/cursor salvos aplicados antes da pintura (evita piscar) -->
   <script>
     (function () {
       try {
@@ -24,6 +24,15 @@
         }
         var anim = localStorage.getItem('gh_anim');
         if (anim === 'off') document.documentElement.dataset.anim = 'off';
+        var idioma = localStorage.getItem('gh_idioma');
+        if (idioma) {
+          document.documentElement.dataset.idioma = idioma;
+          document.documentElement.lang = idioma === 'pt' ? 'pt-BR' : idioma;
+        }
+        var moeda = localStorage.getItem('gh_moeda');
+        if (moeda) document.documentElement.dataset.moeda = moeda;
+        var cursor = localStorage.getItem('gh_cursor');
+        if (cursor) document.documentElement.dataset.cursor = cursor;
       } catch (e) {}
     })();
   </script>

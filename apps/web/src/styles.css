@@ -655,6 +655,8 @@ ul { list-style: none; }
 }
 .carrinho-item-fig { width: 52px; height: 52px; border-radius: .65rem; flex-shrink: 0; display: grid; place-items: center; color: rgba(255,255,255,.85); background: linear-gradient(140deg, var(--c1, #2a2030), var(--c2, #141118)); }
 .carrinho-item-fig svg { width: 1.15rem; height: 1.15rem; }
+.carrinho-item-fig.com-imagem { position: relative; overflow: hidden; }
+.carrinho-item-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 .carrinho-item-info { flex: 1; min-width: 0; }
 .carrinho-item-nome { font-size: .8rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .carrinho-item-controles { display: flex; align-items: center; gap: .4rem; margin-top: .3rem; }
@@ -666,9 +668,14 @@ ul { list-style: none; }
 .carrinho-qty-n { font-size: .8rem; min-width: 1.2rem; text-align: center; font-weight: 600; }
 .carrinho-item-lado { display: flex; flex-direction: column; align-items: flex-end; gap: .45rem; }
 .carrinho-item-preco { font-size: .84rem; font-weight: 700; }
-.carrinho-item-remover { color: #8f8f8f; transition: color .2s; }
-.carrinho-item-remover:hover { color: #ff5c5c; }
-.carrinho-item-remover svg { width: 15px; height: 15px; }
+.carrinho-item-remover {
+  width: 1.7rem; height: 1.7rem; margin-left: .35rem;
+  border-radius: .5rem; border: 0; cursor: pointer;
+  background: rgba(255, 92, 92, .16); color: #ff5c5c;
+  display: grid; place-items: center; transition: background .2s, color .2s;
+}
+.carrinho-item-remover:hover { background: rgba(255, 92, 92, .38); color: #fff; }
+.carrinho-item-remover svg { width: 13px; height: 13px; }
 
 .carrinho-pe { border-top: 1px solid rgba(255,255,255,.1); padding-top: 1rem; margin-top: 1rem; display: flex; flex-direction: column; gap: .8rem; }
 .cupom-progresso { border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03); border-radius: .8rem; padding: .7rem .8rem; }
@@ -973,6 +980,58 @@ html[data-anim='off'] .datilo-cursor { display: none; }
 }
 .busca-mobile { position: relative; margin-top: .7rem; }
 .busca-mobile .busca-campo { max-width: none; width: 100%; height: 2.75rem; }
+
+/* =========================================================
+   Preferências (painel de ajustes: idioma, moeda, cursor)
+   ========================================================= */
+.painel-bandeira { font-size: .95rem; width: 1.1rem; text-align: center; flex-shrink: 0; }
+.painel-bandeira-simbolo { font-size: .7rem; font-weight: 800; color: hsl(var(--primary)); font-family: ui-monospace, Consolas, monospace; }
+.tema-cadeado {
+  display: inline-flex; align-items: center; gap: .25rem; margin-left: auto;
+  font-size: .62rem; font-weight: 700; color: #9a9a9a;
+  border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 1px 7px;
+}
+.tema-cadeado svg { width: 9px; height: 9px; }
+.painel-opcao:disabled { opacity: .55; cursor: not-allowed; }
+.painel-opcao:disabled:hover { background: none; }
+.painel-opcao:disabled .opcao-visto { opacity: 0; }
+
+.painel-cursores { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; }
+.painel-cursor { align-items: center; }
+.painel-cursor-fig { width: 1.1rem; height: 1.1rem; display: grid; place-items: center; flex-shrink: 0; }
+.painel-cursor-fig.vazia::after { content: ''; width: .85rem; height: .85rem; border-radius: 50%; border: 1px dashed rgba(255,255,255,.3); }
+.painel-cursor-ponteiro { font-size: .9rem; }
+
+/* override global do cursor (mira/ponto) — !important vence o cursor: pointer dos botões */
+html[data-cursor='mira'] *, html[data-cursor='mira'] {
+  cursor: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww%2Ew3%2Eorg%2F2000%2Fsvg%22%20width%3D%2228%22%20height%3D%2228%22%20viewBox%3D%220%200%2028%2028%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-opacity%3D%22%2E55%22%20stroke-width%3D%223%2E4%22%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2214%22%20r%3D%227%22%2F%3E%3Cpath%20d%3D%22M14%201v8M14%2019v8M1%2014h8M19%2014h8%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221%2E6%22%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2214%22%20r%3D%227%22%2F%3E%3Cpath%20d%3D%22M14%201v8M14%2019v8M1%2014h8M19%2014h8%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2214%22%20r%3D%221%2E6%22%20fill%3D%22%23ffffff%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") 14 14, auto !important;
+}
+html[data-cursor='ponto'] *, html[data-cursor='ponto'] {
+  cursor: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww%2Ew3%2Eorg%2F2000%2Fsvg%22%20width%3D%2218%22%20height%3D%2218%22%20viewBox%3D%220%200%2018%2018%22%3E%3Ccircle%20cx%3D%229%22%20cy%3D%229%22%20r%3D%225%22%20fill%3D%22%23000%22%20fill-opacity%3D%22%2E5%22%2F%3E%3Ccircle%20cx%3D%229%22%20cy%3D%229%22%20r%3D%223%2E4%22%20fill%3D%22%23ffffff%22%2F%3E%3C%2Fsvg%3E") 9 9, auto !important;
+}
+html[data-cursor='pontoG'] *, html[data-cursor='pontoG'] {
+  cursor: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww%2Ew3%2Eorg%2F2000%2Fsvg%22%20width%3D%2230%22%20height%3D%2230%22%20viewBox%3D%220%200%2030%2030%22%3E%3Ccircle%20cx%3D%2215%22%20cy%3D%2215%22%20r%3D%2210%22%20fill%3D%22%23000%22%20fill-opacity%3D%22%2E45%22%2F%3E%3Ccircle%20cx%3D%2215%22%20cy%3D%2215%22%20r%3D%227%2E6%22%20fill%3D%22%23ffffff%22%2F%3E%3C%2Fsvg%3E") 15 15, auto !important;
+}
+
+/* nota de cobrança em reais (checkout com moeda de referência != BRL) */
+.checkout-nota-cobranca {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .7rem; color: #9a9a9a; margin-top: .5rem;
+}
+
+/* nota de idioma nos documentos legais */
+.privacidade-nota-idioma { font-size: .74rem; color: #9a9a9a; margin: -.4rem 0 1rem; }
+
+/* ---------- 404 ---------- */
+.pagina-404 { text-align: center; align-items: center; }
+.p404-numero {
+  font-size: clamp(4rem, 14vw, 7rem); font-weight: 800; line-height: 1;
+  letter-spacing: -.04em;
+  background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary) / .25));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.p404-numero i { font-style: normal; color: #fff; -webkit-text-fill-color: #fff; }
+.p404-acoes { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
 
 /* foco de acessibilidade */
 :focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; border-radius: 4px; }
