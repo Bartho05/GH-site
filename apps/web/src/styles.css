@@ -181,7 +181,7 @@ ul { list-style: none; }
 .busca-resultados {
   position: absolute; top: 3rem; left: 0; width: min(420px, 92vw);
   max-height: 400px; overflow: auto; z-index: 60;
-  background: rgb(var(--surface)); border: 1px solid rgba(255,255,255,.1);
+  background: rgb(var(--surface) / .88); border: 1px solid rgba(255,255,255,.1);
   border-radius: .8rem; box-shadow: 0 30px 60px rgba(0,0,0,.5);
   padding: .35rem;
 }
@@ -212,7 +212,7 @@ ul { list-style: none; }
 .painel {
   position: absolute; top: calc(100% + 10px); right: 0; z-index: 70;
   width: 280px; padding: .8rem;
-  background: rgb(var(--surface)); border: 1px solid rgba(255,255,255,.1);
+  background: rgb(var(--surface) / .88); border: 1px solid rgba(255,255,255,.1);
   border-radius: .9rem; box-shadow: 0 30px 60px rgba(0,0,0,.55);
 }
 /* o painel de ajustes tem 5 seções — rola em vez de estourar a viewport */
@@ -314,10 +314,13 @@ ul { list-style: none; }
 }
 .hero-fundimento { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(760px 500px at var(--foco-x, 70%) var(--foco-y, 30%), hsl(var(--primary) / .09), transparent 70%); }
 
-/* GHs da marca subindo pelo fundo do hero — identidade própria no lugar
-   de um fundo parado. Puro CSS, uma <i> por letra, só transform/opacity. */
-.hero-gh { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
-.hero-gh i {
+/* GHs da marca subindo pelo fundo do SITE INTEIRO — camada fixa atrás do
+   conteúdo. Puro CSS, uma <i> por letra, só transform/opacity. */
+.gh-camada {
+  position: fixed; inset: 0; z-index: -1;
+  overflow: hidden; pointer-events: none;
+}
+.gh-camada i {
   position: absolute; bottom: -22%;
   font-family: 'Sora', system-ui, sans-serif;
   font-weight: 900; font-style: italic; line-height: 1; letter-spacing: -.05em;
@@ -328,8 +331,8 @@ ul { list-style: none; }
 @keyframes gh-sobe {
   to { transform: translate3d(var(--dx, -6vw), -125vh, 0) rotate(var(--rot, 8deg)); }
 }
-html[data-anim='off'] .hero-gh { display: none; }
-@media (prefers-reduced-motion: reduce) { .hero-gh { display: none; } }
+html[data-anim='off'] .gh-camada { display: none; }
+@media (prefers-reduced-motion: reduce) { .gh-camada { display: none; } }
 
 .hero-grade {
   position: relative; z-index: 5;
@@ -806,7 +809,7 @@ html[data-anim='off'] .podio-estilhaços { transform: none; transition: none; }
 .carrinho-sombra { position: absolute; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(2px); }
 .carrinho-caixa {
   position: relative; height: 100%; width: min(450px, 100vw);
-  background: rgb(var(--surface)); border-left: 1px solid rgba(255,255,255,.1);
+  background: rgb(var(--surface) / .88); border-left: 1px solid rgba(255,255,255,.1);
   display: flex; flex-direction: column; padding: 1.25rem;
   animation: gaveta-entra .25s ease-out;
 }
@@ -885,7 +888,7 @@ html[data-anim='off'] .podio-estilhaços { transform: none; transition: none; }
 
 .aba-painel {
   width: 264px; padding: 1rem;
-  background: rgb(var(--surface)); border: 1px solid rgba(255,255,255,.12);
+  background: rgb(var(--surface) / .88); border: 1px solid rgba(255,255,255,.12);
   box-shadow: 0 26px 60px rgba(0,0,0,.55);
   animation: painel-entra .22s ease-out;
 }
@@ -897,7 +900,7 @@ html[data-anim='off'] .podio-estilhaços { transform: none; transition: none; }
    ========================================================= */
 .checkout-topo {
   border-bottom: 1px solid rgba(255,255,255,.1);
-  background: rgba(13,12,15,.92);
+  background: rgba(13,12,15,.78);
   position: sticky; top: 0; z-index: 30;
   backdrop-filter: blur(10px);
 }
@@ -916,7 +919,7 @@ html[data-anim='off'] .podio-estilhaços { transform: none; transition: none; }
 
 .checkout-cartao {
   max-width: 960px; margin-inline: auto;
-  background: rgb(var(--surface));
+  background: rgb(var(--surface) / .88);
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 1rem; padding: 1.6rem;
   box-shadow: 0 30px 80px rgba(0,0,0,.45);
@@ -1399,6 +1402,81 @@ html[data-cursor='pontoG'] *, html[data-cursor='pontoG'] {
    Minha conta (/conta)
    ========================================================= */
 .conta-entrar { display: flex; flex-direction: column; gap: .7rem; align-items: flex-start; }
+
+/* ----- Tela de login (estilo ProLeague: título, subtítulo,
+   botão de provedor com a marca, divisor "ou", alternativa) ----- */
+.conta-login { display: flex; flex-direction: column; align-items: center; gap: .9rem; max-width: 420px; margin-inline: auto; text-align: center; }
+.conta-login-titulo { font-size: 1.35rem; font-weight: 800; letter-spacing: -.01em; }
+.conta-login-sub { font-size: .9rem; color: #b5b5b5; margin-top: -.5rem; }
+.conta-btn-discord {
+  width: 100%; justify-content: center; padding: .8rem 1rem; font-size: .95rem; font-weight: 700;
+  color: #fff; background: #5865f2; border: 1px solid #4753d8;
+  box-shadow: 0 10px 30px -10px rgb(88 101 242 / .55);
+  transition: filter .2s ease, transform .2s ease;
+}
+.conta-btn-discord:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.conta-btn-discord svg { width: 20px; height: 20px; }
+
+/* divisor "ou" com traços dos dois lados */
+.conta-divisor {
+  display: flex; align-items: center; gap: .7rem; width: 100%;
+  color: #8f8f8f; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em;
+}
+.conta-divisor::before, .conta-divisor::after { content: ''; height: 1px; flex: 1; background: rgba(255,255,255,.14); }
+
+/* consulta por código */
+.conta-consulta { width: 100%; display: flex; flex-direction: column; gap: .45rem; }
+.conta-consulta-titulo { font-size: .8rem; font-weight: 700; color: #d6d6d6; }
+.conta-consulta-dica { font-size: .76rem; color: #939393; margin-top: -.3rem; }
+.conta-consulta-linha { display: flex; gap: .5rem; }
+.conta-consulta-campo {
+  flex: 1; min-width: 0; text-align: center; letter-spacing: .06em;
+  padding: .62rem .8rem; font-size: .9rem; color: rgb(var(--foreground));
+  border-radius: var(--radius); border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.05); outline: none;
+  transition: border-color .2s;
+}
+.conta-consulta-campo:focus { border-color: hsl(var(--primary)); }
+.conta-consulta-campo::placeholder { color: #6b6b6b; }
+.conta-consulta-vazio { display: flex; align-items: center; gap: .45rem; font-size: .8rem; color: #ffb4b4; }
+.conta-consulta-vazio svg { width: 14px; height: 14px; flex: none; }
+.conta-consulta-ok { text-align: left; }
+.conta-voltar { margin-top: .2rem; }
+
+/* ----- Dashboard (logado): identidade + estatísticas ----- */
+.conta-identidade {
+  display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap;
+  border: 1px solid rgba(255,255,255,.1); border-radius: .9rem;
+  background: rgba(255,255,255,.03); padding: .9rem 1rem; margin-bottom: .8rem;
+}
+.conta-identidade-info { display: flex; align-items: center; gap: .7rem; min-width: 0; }
+.conta-avatar {
+  width: 46px; height: 46px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 1.15rem; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  box-shadow: 0 0 0 2px rgba(255,255,255,.14), 0 8px 20px -8px hsl(var(--primary) / .6);
+}
+.conta-tag { font-weight: 700; font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conta-tag-sub { display: flex; align-items: center; gap: .3rem; font-size: .72rem; color: #22c55e; }
+.conta-tag-sub svg { width: 12px; height: 12px; }
+
+.conta-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem;
+  margin-bottom: .9rem;
+}
+@media (max-width: 560px) { .conta-stats { grid-template-columns: 1fr; } }
+.conta-stat {
+  border: 1px solid rgba(255,255,255,.09); border-radius: .8rem;
+  background: rgba(255,255,255,.02); padding: .7rem .9rem;
+  display: flex; flex-direction: column; gap: .15rem;
+}
+.conta-stat-valor {
+  font-size: 1.05rem; font-weight: 800; color: #fff;
+  font-variant-numeric: tabular-nums; letter-spacing: -.01em;
+}
+.conta-stat-rotulo { font-size: .72rem; color: #9c9c9c; text-transform: uppercase; letter-spacing: .06em; }
+
 .conta-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap; margin-bottom: .3rem; }
 .conta-polling-dica { font-size: .72rem; color: #8f8f8f; margin-bottom: .8rem; }
 .conta-pedidos { display: flex; flex-direction: column; gap: .55rem; }
@@ -1419,4 +1497,25 @@ html[data-cursor='pontoG'] *, html[data-cursor='pontoG'] {
 
 @media (max-width: 720px) {
   .produto-detalhe { grid-template-columns: 1fr; }
+}
+
+/* =========================================================
+   Efeito de vidro (glass) — por último no arquivo para vencer as
+   regras base. O blur vive na regra (ignorado onde não há suporte);
+   o fundo só afina para translúcido quando backdrop-filter existe —
+   onde não existe, os painéis ficam sólidos e legíveis.
+   ========================================================= */
+.painel, .busca-resultados, .carrinho-caixa, .aba-painel, .checkout-cartao {
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  backdrop-filter: blur(16px) saturate(1.3);
+}
+.checkout-topo {
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+}
+@supports (backdrop-filter: blur(2px)) {
+  .painel, .busca-resultados, .carrinho-caixa, .aba-painel, .checkout-cartao {
+    background: rgb(var(--surface) / .72);
+  }
+  .checkout-topo { background: rgba(13,12,15,.72); }
 }

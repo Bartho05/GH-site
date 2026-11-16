@@ -79,7 +79,7 @@ export default function Produto() {
       <main className="container checkout-miolo">
         <nav className="produto-caminho" aria-label="Breadcrumb">
           <Link to="/">{t('rodapeLoja')}</Link>
-          {categoria ? <><Icone nome="chevron-right" /><Link to={'/#' + categoria.id}>{categoria.nome}</Link></> : null}
+          {categoria ? <><Icone nome="chevron-right" /><Link to={'/#secao-' + categoria.id}>{categoria.nome}</Link></> : null}
           <Icone nome="chevron-right" /><span aria-current="page">{p.nome}</span>
         </nav>
 

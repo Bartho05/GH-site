@@ -100,9 +100,13 @@ export default function Checkout() {
     puxarConfigServidor().then((doServidor) => { if (doServidor) setCfg(mesclar(CONFIG_BASE, doServidor)); });
   }, []);
 
-  /* cupom de boas-vindas já vem preenchido (como no carrinho antigo) */
+  /* cupom da loja já vem preenchido. A config do servidor chega DEPOIS do
+     primeiro render: se preenchêssemos só quando o campo está vazio, o
+     código de fábrica (GHBEMVINDO) ficava travado no lugar do cupom real
+     da loja — então re-preenche enquanto o valor ainda é o de fábrica. */
   useEffect(() => {
-    if (!cupom && cfg.cupom && cfg.cupom.codigo) setCupom(cfg.cupom.codigo);
+    const daFabrica = CONFIG_BASE.cupom && CONFIG_BASE.cupom.codigo;
+    if (cfg.cupom && cfg.cupom.codigo && (!cupom || cupom === daFabrica)) setCupom(cfg.cupom.codigo);
   }, [cfg.cupom && cfg.cupom.codigo]);
 
   /* polling do status enquanto o pedido está pendente */

@@ -1,9 +1,13 @@
 /* =========================================================
-   GH ROLEPLAY — Minha conta (Fase B)
-   Login com Discord (?volta=conta) e histórico dos pedidos
-   do próprio cliente: GET /api/minha/conta com a sessão
-   X-Discord-Token (30 min, guardada no sessionStorage).
-   A lista atualiza sozinha por polling (10s).
+   GH ROLEPLAY — Minha conta (estilo ProLeague)
+   Tela de LOGIN (sem conta): título "Fazer login", subtítulo
+   "Entre com sua conta para continuar", botão principal com a
+   marca do Discord e, depois do divisor "ou", consulta de
+   pedido pelo código (endpoint público /api/checkout/:codigo).
+   DASHBOARD (logado): identidade com avatar/tag, três estatísticas
+   (total investido, pedidos, entregues) e o histórico com selos
+   de status — GET /api/minha/conta com a sessão X-Discord-Token
+   (30 min, no sessionStorage), atualizando por polling (10s).
    ========================================================= */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
@@ -31,6 +35,11 @@ export default function Conta() {
   const [conta, setConta] = useState(null);      // { tag, pedidos } quando logado
   const [nota, setNota] = useState('');           // mensagem de estado vazio/erro
   const [carregando, setCarregando] = useState(true);
+
+  /* consulta de pedido pelo código (sem login) */
+  const [codigo, setCodigo] = useState('');
+  const [consultando, setConsultando] = useState(false);
+  const [consulta, setConsulta] = useState(null); // { id, status, total } | { vazio: true }
 
   function limparSessao() {
     try { sessionStorage.removeItem('gh_dc'); } catch (e) {}
@@ -78,6 +87,29 @@ export default function Conta() {
     return () => clearInterval(t);
   }, [conta && conta.tag]);
 
+  async function consultarPedido(e) {
+    e.preventDefault();
+    const c = codigo.trim().toUpperCase();
+    if (!c || consultando) return;
+    setConsultando(true);
+    setConsulta(null);
+    setNota('');
+    try {
+      const r = await fetch(API_RAIZ + '/api/checkout/' + encodeURIComponent(c));
+      if (r.status === 404) setConsulta({ vazio: true });
+      else if (!r.ok) throw new Error('http ' + r.status);
+      else setConsulta(await r.json());
+    } catch (err) {
+      setNota(t('erroConexao'));
+    }
+    setConsultando(false);
+  }
+
+  /* estatísticas do dashboard */
+  const pedidos = (conta && conta.pedidos) || [];
+  const totalInvestido = pedidos.filter((p) => p.status !== 'cancelado').reduce((s, p) => s + (Number(p.total) || 0), 0);
+  const entregues = pedidos.filter((p) => p.status === 'entregue').length;
+
   return (
     <div className="checkout-pagina">
       <TopoLoja cfg={cfg} />
@@ -87,38 +119,99 @@ export default function Conta() {
           {nota ? <p className="checkout-erro" role="alert"><Icone nome="circle-alert" /> {nota}</p> : null}
 
           {!conta ? (
-            <div className="conta-entrar">
-              <p className="checkout-dica">
-                <Icone nome="info" /> {t('contaIntro')}
-              </p>
-              <a className="btn btn-primario btn-discord" href={API_RAIZ + '/api/auth/discord?volta=conta'}>
-                <Icone nome="message-circle" /> {t('entrarDiscord')}
+            /* ===== Tela de login (estilo ProLeague) ===== */
+            <div className="conta-login">
+              <h2 className="conta-login-titulo">{t('contaLoginTitulo')}</h2>
+              <p className="conta-login-sub">{t('contaLoginSub')}</p>
+
+              <a className="btn conta-btn-discord" href={API_RAIZ + '/api/auth/discord?volta=conta'}>
+                <Icone nome="discord" /> {t('entrarDiscord')}
               </a>
-              <Link to="/" className="btn btn-secundario"><Icone nome="arrow-left" /> {t('voltarLoja')}</Link>
+
+              <div className="conta-divisor" aria-hidden="true"><span>{t('contaOu')}</span></div>
+
+              {/* Consulta por código: quem não tem conta acompanha o pedido mesmo assim */}
+              <form className="conta-consulta" onSubmit={consultarPedido}>
+                <p className="conta-consulta-titulo">{t('consultaTitulo')}</p>
+                <p className="conta-consulta-dica">{t('consultaDica')}</p>
+                <div className="conta-consulta-linha">
+                  <input
+                    type="text"
+                    className="campo campo-mono conta-consulta-campo"
+                    value={codigo}
+                    onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+                    placeholder="PED-XXXXXX"
+                    maxLength={24}
+                    autoComplete="off"
+                    spellCheck="false"
+                    aria-label={t('consultaTitulo')}
+                  />
+                  <button type="submit" className="btn btn-secundario" disabled={consultando}>
+                    <Icone nome="search" /> {consultando ? t('consultando') : t('consultar')}
+                  </button>
+                </div>
+
+                {consulta && consulta.vazio ? (
+                  <p className="conta-consulta-vazio" role="status"><Icone nome="circle-alert" /> {t('consultaNaoAchou')}</p>
+                ) : null}
+                {consulta && !consulta.vazio ? (
+                  <div className="conta-pedido conta-consulta-ok" role="status">
+                    <div className="conta-pedido-topo">
+                      <code className="conta-pedido-codigo">{consulta.id}</code>
+                      <span className="checkout-status-selo" data-status={consulta.status}>
+                        <Icone nome={ICONES_STATUS[consulta.status] || 'receipt'} />
+                        {t(ROTULOS_STATUS[consulta.status] || 'pedido')}
+                      </span>
+                      <strong className="conta-pedido-total">{BRL(consulta.total)}</strong>
+                    </div>
+                  </div>
+                ) : null}
+              </form>
+
+              <Link to="/" className="btn btn-secundario conta-voltar"><Icone nome="arrow-left" /> {t('voltarLoja')}</Link>
             </div>
           ) : (
+            /* ===== Dashboard (logado) ===== */
             <>
-              <div className="conta-cabecalho">
-                <div className="checkout-discord-ok">
-                  <Icone nome="message-circle" />
-                  <span>{conta.tag}</span>
+              <div className="conta-identidade">
+                <div className="conta-identidade-info">
+                  <span className="conta-avatar" aria-hidden="true">{(conta.tag || '?').charAt(0)}</span>
+                  <div>
+                    <p className="conta-tag">{conta.tag}</p>
+                    <p className="conta-tag-sub"><Icone nome="badge-check" /> {t('contaConectada')}</p>
+                  </div>
                 </div>
                 <button type="button" className="btn btn-secundario" onClick={limparSessao}>
                   <Icone nome="log-out" /> {t('sair')}
                 </button>
               </div>
 
+              <div className="conta-stats">
+                <div className="conta-stat">
+                  <span className="conta-stat-valor">{BRL(totalInvestido)}</span>
+                  <span className="conta-stat-rotulo">{t('totalGasto')}</span>
+                </div>
+                <div className="conta-stat">
+                  <span className="conta-stat-valor">{pedidos.length}</span>
+                  <span className="conta-stat-rotulo">{t('numPedidos')}</span>
+                </div>
+                <div className="conta-stat">
+                  <span className="conta-stat-valor">{entregues}</span>
+                  <span className="conta-stat-rotulo">{t('entreguesConta')}</span>
+                </div>
+              </div>
+
               <p className="conta-polling-dica">{t('contaAtualiza')}</p>
 
               {carregando ? <p className="checkout-vazio">{t('carregandoPedidos')}</p> : null}
-              {!carregando && (!conta.pedidos || !conta.pedidos.length) ? (
+              {!carregando && !pedidos.length ? (
                 <p className="checkout-vazio">
                   <Icone nome="shopping-cart" />
                   {t('semPedidosA')} <Link to="/">{t('escolherProdutos')}</Link>
                 </p>
               ) : null}
               <div className="conta-pedidos">
-                {(conta.pedidos || []).map((p) => (
+                {pedidos.map((p) => (
                   <div className="conta-pedido" key={p.id}>
                     <div className="conta-pedido-topo">
                       <code className="conta-pedido-codigo">{p.id}</code>

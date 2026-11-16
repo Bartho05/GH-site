@@ -91,7 +91,7 @@ function BannerConsentimento() {
   const { t } = usarIdioma();
   if (aceito) return null;
   return (
-    <div className="consentimento" role="region" aria-label="Aviso de cookies e dados">
+    <div className="consentimento" role="region" aria-label={t('consentimentoAviso')}>
       <p>
         {t('consentA')} <Link to="/privacidade">{t('privacidade')}</Link>{t('consentB')}
       </p>
@@ -273,6 +273,7 @@ function CardProduto({ p, comPromo, idx, onAdd }) {
    QR de demonstração (mesma fórmula do original)
    ========================================================= */
 function QrFake() {
+  const { t } = usarIdioma();
   const fixa = new Set(['0_0', '0_1', '0_2', '0_3', '0_4', '0_5', '0_6', '1_0', '1_6', '2_0', '2_2', '2_3', '2_6', '3_0', '3_2', '3_6', '4_0', '4_6', '5_0', '5_6', '6_0', '6_1', '6_2', '6_3', '6_4', '6_5', '6_6', '7_6', '8_6']);
   const celulas = [];
   for (let l = 0; l < 9; l++) {
@@ -281,7 +282,7 @@ function QrFake() {
       celulas.push(<i key={`${l}-${c}`} className={cheia ? '' : 'f'} />);
     }
   }
-  return <div className="qr-fake" aria-label="QR Code demonstrativo">{celulas}</div>;
+  return <div className="qr-fake" role="img" aria-label={t('qrDemo')}>{celulas}</div>;
 }
 
 /* =========================================================
@@ -468,6 +469,9 @@ export default function App() {
     <>
       <a href="#conteudo" className="skip-link">{t('pular')}</a>
 
+      {/* Fundo da marca: GHs passando atrás de todo o site (camada fixa) */}
+      <FundoGH />
+
       {/* ===== Barra de anúncio ===== */}
       <div id="anuncio" className="anuncio">
         <p dangerouslySetInnerHTML={{ __html: textoAnuncio }} />
@@ -477,13 +481,13 @@ export default function App() {
       <FaixaEventos />
       <header id="cabecalho" className="cabecalho">
         <div className="container">
-          <nav className="cab-nav" aria-label="Navegação principal">
+          <nav className="cab-nav" aria-label={t('navPrincipal')}>
             <div className="cab-esquerda">
               <Link to="/" className="marca">
                 <span className="marca-logo" aria-hidden="true">{cfg.logoIniciais}</span>
                 <span className="marca-nome">
                   <span className="marca-titulo">{cfg.loja}</span>
-                  <Icone nome="shield-check" className="marca-verificado" aria-label="Loja verificada" />
+                  <Icone nome="shield-check" className="marca-verificado" aria-label={t('lojaVerificada')} />
                 </span>
               </Link>
 
@@ -491,7 +495,7 @@ export default function App() {
             </div>
 
             {cfg.podio.length > 0 && (
-              <a href="#podio" className="pilula-ranking" aria-label="Ranking dos maiores apoiadores">
+              <a href="#podio" className="pilula-ranking" aria-label={t('podioLabel')}>
                 {cfg.podio.slice(0, 3).map((p, i) => (
                   <span className="pilula-item" key={p.nome + i} title={`${i + 1}º ${p.nome} · ${p.valor}`}>
                     <Coroa style={{ width: 11, height: 11, color: 'hsl(var(--primary))' }} />
@@ -527,7 +531,7 @@ export default function App() {
                 >
                   <Icone nome="settings" />
                 </button>
-                <div className="painel ajustes-painel" role="dialog" aria-label="Ajustes do site" hidden={!ajustesAberto}>
+                <div className="painel ajustes-painel" role="dialog" aria-label={t('ajustes')} hidden={!ajustesAberto}>
                   <p className="painel-secao">{t('movimento')}</p>
                   <button type="button" className="chave" aria-pressed={animOff} onClick={alternarAnim}>
                     <span className="chave-nome">{t('reduzirAnim')}</span>
@@ -789,7 +793,6 @@ export default function App() {
         >
           <div className="hero-fundo" aria-hidden="true"></div>
           <div className="hero-fundimento" aria-hidden="true"></div>
-          <FundoGH />
 
           <div className="container hero-grade">
             <div className="hero-texto">
@@ -972,7 +975,7 @@ export default function App() {
             <a href="#contato">{t('contato')}</a>
             <Link to="/admin">{t('painelDono')}</Link>
           </nav>
-          <div className="rodape-coluna">
+          <div className="rodape-coluna" id="contato">
             <p className="rodape-titulo">{t('rodapeComunidade')}</p>
             <div className="rodape-redes">
               {cfg.links.map((l, i) => (

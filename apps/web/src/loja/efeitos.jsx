@@ -131,9 +131,12 @@ export function useDatilo(frases, ligado) {
   return tela;
 }
 
-/* Fundo do hero: vários "GH" da marca subindo devagar, cada um com tamanho,
-   velocidade e rotação próprios. Camada decorativa — some com "Reduzir
-   animações" (data-anim off) e com prefers-reduced-motion (via CSS). */
+/* Fundo do site inteiro: vários "GH" da marca subindo devagar por trás do
+   conteúdo, cada um com tamanho, velocidade e rotação próprios. Camada
+   fixa (position: fixed) pintada no fundo da página (z-index -1): fica
+   acima do fundo do body e abaixo de todo o conteúdo. Seções com fundo
+   transparente deixam os GHs aparecerem; cartões opacos cobrem. Some com
+   "Reduzir animações" (data-anim off) e com prefers-reduced-motion. */
 const GHS_FUNDOS = [
   { x: 3,  tam: 120, dur: 26, atraso: -2,   op: .06, dx: '-8vw',  rot: '7deg' },
   { x: 12, tam: 84,  dur: 33, atraso: -14,  op: .05, dx: '6vw',   rot: '-6deg' },
@@ -153,7 +156,7 @@ const GHS_FUNDOS = [
 
 export function FundoGH() {
   return (
-    <div className="hero-gh" aria-hidden="true">
+    <div className="gh-camada" aria-hidden="true">
       {GHS_FUNDOS.map((g, i) => (
         <i
           key={i}
