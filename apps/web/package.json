@@ -1,6 +1,21 @@
 {
   "name": "@gh-roleplay/web",
   "private": true,
-  "version": "1.0.0",
-  "description": "Site + painel do dono (HTML/CSS/JS puro), servidos pelo apps/api ou standalone (file://) com fallback local."
+  "version": "2.0.0",
+  "description": "Site + painel do dono em React (Vite). O build (dist/) é servido pelo apps/api; no dev, o Vite proxya /api para a API.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^1.73.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.3.0",
+    "vite": "^8.3.8"
+  }
 }

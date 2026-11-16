@@ -58,9 +58,8 @@ test('site estático é servido', async () => {
   const r = await pede('/');
   assert.equal(r.status, 200);
   assert.ok(r.dados.includes('GH Roleplay'));
-  const configBase = await pede('/config-base.js');
-  assert.equal(configBase.status, 200);
-  assert.ok(configBase.dados.includes('CONFIG_BASE'));
+  const admin = await pede('/admin.html'); // config-base agora vive dentro do bundle do Vite
+  assert.equal(admin.status, 200);
   const faltando = await pede('/nao-existe.txt');
   assert.equal(faltando.status, 404);
     const travessia = await fetch(base + '/%2e%2e/package-lock.json');

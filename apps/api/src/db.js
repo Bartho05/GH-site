@@ -14,7 +14,7 @@ const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 
 const RAIZ_WEB = path.join(__dirname, '..', '..', 'web');
-const { CONFIG_BASE } = require(path.join(RAIZ_WEB, 'config-base.js'));
+const { CONFIG_BASE } = require(path.join(RAIZ_WEB, 'src', 'config-base.mjs'));
 
 const STATUSES_PEDIDO = ['pendente', 'pago', 'entregue', 'cancelado'];
 const STATUSES_ENTREGA = ['pendente', 'entregue', 'falhou'];

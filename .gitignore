@@ -1,5 +1,6 @@
 node_modules/
 apps/api/data/
+apps/web/dist/
 npm-debug.log*
 *.log
 .DS_Store

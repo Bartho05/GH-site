@@ -7,11 +7,12 @@
     "apps/*"
   ],
   "scripts": {
-    "start": "npm run start --workspace apps/api",
-    "dev": "npm run dev --workspace apps/api",
+    "build": "npm run build --workspace apps/web",
+    "start": "node scripts/start.mjs",
+    "dev": "node scripts/dev.mjs",
     "test": "npm test --workspaces --if-present"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   }
 }

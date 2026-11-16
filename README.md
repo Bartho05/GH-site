@@ -8,18 +8,19 @@ Loja dark para servidores FiveM + painel do dono + backend Node puro.
 
 | Pasta     | O que é |
 |-----------|---------|
-| `apps/web` | Frontend (HTML/CSS/JS puro). `index.html` = loja · `admin.html` = painel do dono |
+| `apps/web` | Frontend **React + Vite** (`src/loja` = site · `src/admin` = painel; build em `dist/`) |
 | `apps/api` | Backend Node (só módulos nativos `node:http` + `node:sqlite`, zero dependência npm) |
 
 ## Rodar
 
 ```bash
 npm install       # uma vez (liga os workspaces)
-npm start         # loja:    http://localhost:8123
+npm start         # builda o frontend (se preciso) e sobe tudo:
+                  # loja:    http://localhost:8123
                   # painel:  http://localhost:8123/admin.html
                   # api:     http://localhost:8123/api/health
-npm run dev       # igual, com auto-recarga do servidor
-npm test          # 23 testes (unitários + integração)
+npm run dev       # desenvolvimento: Vite com hot-reload (5173) + API (8123, proxy /api)
+npm test          # 30 testes (unitários + integração + banco)
 ```
 
 Porta e pasta de dados são configuráveis: `PORT=3000 GHRP_DATA=C:\dados npm start`.
@@ -46,7 +47,7 @@ Senha inicial: **admin123** — troque na aba *Segurança* do painel. Com servid
 
 ## Modo offline
 
-Abrindo `index.html` direto (file://), a loja funciona igual: usa o `config-base.js` + localStorage. Quando detecta o servidor (porta 8123), a config do servidor tem prioridade e o "Finalizar compra" cria pedidos reais.
+Com o frontend em React/Vite, o site roda sempre via servidor (`npm start` — módulos ES não abrem por `file://`). Sem a API no ar, a loja continua navegável com a config do `localStorage`/padrão de fábrica; só o checkout e o painel exigem o backend. A config do servidor tem prioridade sobre a local quando os dois existem.
 
 ## Segurança
 
@@ -58,7 +59,7 @@ Abrindo `index.html` direto (file://), a loja funciona igual: usa o `config-base
 
 ## Dados
 
-`apps/api/data/loja.db` — banco **SQLite** nativo do Node (zero dependência, arquivo único na VPS). Guarda config, senha do admin, pedidos e a fila de entregas para o servidor FiveM. Na primeira execução importa automaticamente o `store.json` antigo, se existir; sem ele, semeia a config de `apps/web/config-base.js`. Backup = copiar o arquivo. Para resetar, apague `loja.db` (e o `store.json`, se quiser zerar o legado).
+`apps/api/data/loja.db` — banco **SQLite** nativo do Node (zero dependência, arquivo único na VPS). Guarda config, senha do admin, pedidos e a fila de entregas para o servidor FiveM. Na primeira execução importa automaticamente o `store.json` antigo, se existir; sem ele, semeia a config de `apps/web/src/config-base.mjs`. Backup = copiar o arquivo. Para resetar, apague `loja.db` (e o `store.json`, se quiser zerar o legado).
 
 ## Próximas fases
 

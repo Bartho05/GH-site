@@ -12,12 +12,19 @@ const fs = require('fs');
 const path = require('path');
 const api = require('./api');
 
-const RAIZ_WEB = path.join(__dirname, '..', '..', 'web');
+const RAIZ_WEB_TUDO = path.join(__dirname, '..', '..', 'web');
+/* produção: serve o build do React (dist); sem build ainda, serve os fontes */
+const RAIZ_WEB = fs.existsSync(path.join(RAIZ_WEB_TUDO, 'dist'))
+  ? path.join(RAIZ_WEB_TUDO, 'dist')
+  : RAIZ_WEB_TUDO;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.jsx': 'text/javascript; charset=utf-8',
+  '.map': 'application/json; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',

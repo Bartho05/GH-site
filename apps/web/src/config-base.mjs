@@ -93,11 +93,4 @@ const CONFIG_BASE = {
   ]
 };
 
-/* Fonte única de verdade: este arquivo carrega no navegador (script clássico,
-   define window.CONFIG_BASE) e também no Node (module.exports), pelo backend. */
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { CONFIG_BASE };
-}
-if (typeof window !== 'undefined' && !window.CONFIG_BASE) {
-  window.CONFIG_BASE = CONFIG_BASE;
-}
+export { CONFIG_BASE };
