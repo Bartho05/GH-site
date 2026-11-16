@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
 import Loja from './loja/App.jsx';
 import Checkout from './loja/Checkout.jsx';
+import Conta from './loja/Conta.jsx';
+import Produto from './loja/Produto.jsx';
 import Privacidade from './loja/Privacidade.jsx';
 
 /* painel carrega em chunk separado: só quem entra em /admin baixa */
@@ -21,6 +23,8 @@ createRoot(document.getElementById('raiz')).render(
       <Routes>
         <Route path="/" element={<Loja />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/conta" element={<Conta />} />
+        <Route path="/produto/:slug" element={<Produto />} />
         <Route path="/privacidade" element={<Privacidade />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<Loja />} />

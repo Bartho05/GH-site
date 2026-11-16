@@ -23,7 +23,7 @@ npm start         # builda o frontend (se preciso) e sobe tudo:
                   # painel:  http://localhost:8123/admin  (rota da SPA)
                   # api:     http://localhost:8123/api/health
 npm run dev       # desenvolvimento: Vite com hot-reload (5173) + API (8123, proxy /api)
-npm test          # 42 testes (unitários + integração + banco)
+npm test          # 46 testes (unitários + integração + banco)
 ```
 
 Porta e pasta de dados são configuráveis: `PORT=3000 GHRP_DATA=C:\dados npm start`.
@@ -48,7 +48,7 @@ Porta e pasta de dados são configuráveis: `PORT=3000 GHRP_DATA=C:\dados npm st
 | `POST /api/auth/login` | `{senha}` → token Bearer válido por 12h |
 | `POST /api/auth/logout` | encerra o token |
 | `POST /api/auth/trocar-senha` | **admin** troca a senha (guarda scrypt+salt) |
-| `GET  /api/auth/discord` | manda o cliente pro Discord (OAuth `identify`); sem chaves → 503 |
+| `GET  /api/auth/discord` | manda o cliente pro Discord (OAuth `identify`); `?volta=conta` devolve à página Minha conta; sem chaves → 503 |
 | `GET  /api/auth/discord/callback` | o Discord volta com o `code`; sessão temporária de 30 min |
 | `GET  /api/products?categoria=id` · `/api/categories` | catálogo |
 | `POST /api/checkout` | **público** cria o pedido do cliente: `{itens, playerId, cupom?}` + header `X-Discord-Token` opcional → devolve pedido + Pix (copia e cola) ou a chave manual. Rate limit por IP |
@@ -56,8 +56,12 @@ Porta e pasta de dados são configuráveis: `PORT=3000 GHRP_DATA=C:\dados npm st
 | `POST /api/orders` | fluxo antigo de criação de pedido (validado, com rate limit) |
 | `GET  /api/orders` | **admin** lista os pedidos — filtro `?status=` + resumo |
 | `PATCH /api/orders/:id` | **admin** muda o status. Ir para `pago` grava `pago_em` e **alimenta a fila de entregas** |
-| `GET  /api/deliveries/queue` | **servidor FiveM** (header `X-Server-Key`) busca as entregas pendentes |
+| `GET  /api/deliveries/queue` | **servidor FiveM** (header `X-Server-Key`) busca as entregas pendentes (mais antiga primeiro) |
 | `POST /api/deliveries/:id/marcar` | **servidor FiveM** marca a entrega `entregue`/`falhou` |
+| `GET  /api/stats` | **admin** estatísticas: faturamento por dia (30d), mais vendidos, ticket médio, clientes únicos |
+| `GET  /api/entregas` | **admin** fila completa de entregas — filtro `?status=` (`pendente`/`entregue`/`falhou`/`todos`) |
+| `POST /api/entregas/:id/marcar` | **admin** marca a entrega na mão pelo painel (servidor do jogo offline) |
+| `GET  /api/minha/conta` | **cliente** histórico dos próprios pedidos (header `X-Discord-Token`) |
 | `POST /api/webhooks/mercadopago` | o MP avisa o pagamento — o backend **re-busca o payment na API do MP** (nunca confia no corpo) e confirma o pedido via `external_reference` |
 | `GET  /api/auditoria` | **admin** últimas ações: logins, config, status, pagamentos, entregas |
 
@@ -70,7 +74,13 @@ Porta e pasta de dados são configuráveis: `PORT=3000 GHRP_DATA=C:\dados npm st
 
 ## Admin
 
-Painel em **`/admin`** (rota da SPA — o endereço antigo `/admin.html` redireciona pra lá). Senha inicial: **admin123** — troque na aba *Segurança* do painel. Abas novas: **chave/tipo/instruções do Pix** (em *Geral*), detalhes do pedido (ID, Discord, `pago em`, ID do Mercado Pago) e **registro de auditoria** (em *Segurança*).
+Painel em **`/admin`** (rota da SPA — o endereço antigo `/admin.html` redireciona pra lá). Senha inicial: **admin123** — troque na aba *Segurança* do painel. Abas: config completa da loja, **Estatísticas** (faturamento 30 dias, mais vendidos, ticket médio, exportação de pedidos em CSV na aba *Pedidos*), **Pedidos**, **Entregas** (fila + marcar na mão) e **registro de auditoria** (em *Segurança*).
+
+## Conta do cliente e página de produto
+
+- **`/conta`** — o cliente entra com o Discord e vê o histórico dos próprios pedidos (status ao vivo por polling de 10s).
+- **`/produto/:slug`** — página do produto com foto real, descrição e quantidade (o card da vitrine liga pra ela).
+- Foto e descrição são cadastrados pelo painel, aba *Produtos* — opcionais; sem foto, o card usa o ícone/gradiente.
 
 ## Entrega automática (FiveM)
 

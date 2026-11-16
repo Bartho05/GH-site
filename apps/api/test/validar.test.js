@@ -54,6 +54,32 @@ test('config: produto com categoria apagada recai na primeira', () => {
   assert.equal(r.config.produtos[0].categoria, 'a');
 });
 
+test('config: imagem e descrição do produto são saneadas', () => {
+  const r = normalizaConfig({
+    produtos: [
+      {
+        nome: 'VIP MÍDIA', preco: 19.9,
+        imagem: 'javascript:alert(1)',
+        descricao: '   <b>Camisa</b> exclusiva no Discord   '
+      },
+      { nome: 'SEM FOTO', preco: 5 }
+    ]
+  });
+  assert.equal(r.ok, true);
+  const comFoto = r.config.produtos[0];
+  assert.equal(comFoto.imagem, '');               // esquema perigoso cai no fallback vazio
+  assert.equal(comFoto.descricao, 'Camisa exclusiva no Discord'); // sem markup, sem espaços sobrando
+
+  const valida = normalizaConfig({
+    produtos: [{ nome: 'COM FOTO', preco: 9, imagem: 'https://i.imgur.com/abc.png' }]
+  });
+  assert.equal(valida.config.produtos[0].imagem, 'https://i.imgur.com/abc.png'); // URL boa passa
+
+  const semFoto = r.config.produtos[1];
+  assert.equal(semFoto.imagem, '');
+  assert.equal(semFoto.descricao, '');
+});
+
 test('pedido: campos tratados, total arredondado em centavos', () => {
   const r = normalizaPedido(
     { itens: [{ nome: 'VIP OURO – 30 DIAS', quantidade: 2 }] },

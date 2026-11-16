@@ -395,9 +395,9 @@ export default function Checkout() {
 }
 
 /* =============================================
-   Cabeçalho enxuto do checkout
+   Cabeçalho enxuto (compartilhado com /conta)
    ============================================= */
-function TopoLoja({ cfg }) {
+export function TopoLoja({ cfg }) {
   return (
     <header className="checkout-topo">
       <div className="container checkout-topo-linha">

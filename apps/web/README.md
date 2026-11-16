@@ -1,6 +1,6 @@
 # apps/web — site + painel do dono (React + Vite)
 
-SPA única em **React** (JS puro, sem TypeScript) com **React Router**: `/` = loja, `/checkout` = finalização da compra, `/privacidade` = LGPD, `/admin` = painel do dono (carregado por lazy-load, chunk separado). Mesmo visual de antes: os CSS (`src/styles.css`, `src/admin.css`) e as classes são os mesmos — só o motor virou React.
+SPA única em **React** (JS puro, sem TypeScript) com **React Router**: `/` = loja, `/checkout` = finalização da compra, `/conta` = histórico do cliente (login Discord), `/produto/:slug` = página do produto, `/privacidade` = LGPD, `/admin` = painel do dono (carregado por lazy-load, chunk separado). Mesmo visual de antes: os CSS (`src/styles.css`, `src/admin.css`) e as classes são os mesmos — só o motor virou React.
 
 ```bash
 npm start   # na RAIZ do monorepo → builda (se preciso) e sobe http://localhost:8123 (/admin = painel)

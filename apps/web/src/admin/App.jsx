@@ -33,11 +33,14 @@ const ABAS = [
   { id: 'produtos', icone: 'package', nome: 'Produtos' },
   { id: 'depoimentos', icone: 'message-square', nome: 'Depoimentos' },
   { id: 'links', icone: 'link', nome: 'Links & redes' },
+  { id: 'estatisticas', icone: 'trending-up', nome: 'Estatísticas' },
   { id: 'pedidos', icone: 'receipt', nome: 'Pedidos' },
+  { id: 'entregas', icone: 'truck', nome: 'Entregas' },
   { id: 'seguranca', icone: 'lock', nome: 'Segurança' }
 ];
 
 const ROTULOS_STATUS = { pendente: 'Pendente', pago: 'Pago', entregue: 'Entregue', cancelado: 'Cancelado' };
+const ROTULOS_ENTREGA = { pendente: 'Pendente', entregue: 'Entregue', falhou: 'Falhou' };
 
 /* ---------- utilidades ---------- */
 function senhaAtual() {
@@ -130,7 +133,9 @@ function coletarProdutos(linhas, categorias) {
       precoAntigo,
       icone: l.icone || 'package',
       cores: [l.cor1 || '#2a2030', l.cor2 || '#141118'],
-      tag: l.tag || ''
+      tag: l.tag || '',
+      imagem: (l.imagem || '').trim(),
+      descricao: (l.descricao || '').trim()
     };
   });
 }
@@ -251,6 +256,16 @@ export default function App() {
   const [auditoria, setAuditoria] = useState(null);
   const [auditoriaNota, setAuditoriaNota] = useState('');
 
+  /* seção estatísticas */
+  const [stats, setStats] = useState(null);
+  const [statsNota, setStatsNota] = useState('');
+
+  /* seção entregas */
+  const [filtroEntregas, setFiltroEntregas] = useState('pendente');
+  const [entregas, setEntregas] = useState(null);
+  const [entregasNota, setEntregasNota] = useState('');
+  const [entregaEm, setEntregaEm] = useState(null);
+
   function toastMsg(msg, ok = true) {
     setToast({ msg, ok });
     clearTimeout(toastTimer.current);
@@ -354,6 +369,99 @@ export default function App() {
   useEffect(() => {
     if (logado && aba === 'seguranca') carregarAuditoria();
   }, [logado, aba, modo]);
+
+  /* ---------- estatísticas ---------- */
+  async function carregarStats() {
+    if (modo !== 'servidor') {
+      setStats(null);
+      setStatsNota('Os números ficam no servidor — entre pelo modo servidor para vê-los aqui.');
+      return;
+    }
+    try {
+      const r = await fetch(API_RAIZ + '/api/stats', { headers: cabecalhoAuth() });
+      if (r.status === 401) { setStats(null); setStatsNota('Sessão expirou — entre de novo.'); return; }
+      if (!r.ok) throw new Error('http ' + r.status);
+      setStats(await r.json());
+      setStatsNota('');
+    } catch (e) {
+      setStats(null);
+      setStatsNota('Sem servidor para calcular as estatísticas agora.');
+    }
+  }
+
+  useEffect(() => {
+    if (logado && aba === 'estatisticas') carregarStats();
+  }, [logado, aba, modo]);
+
+  /* ---------- entregas (fila do servidor FiveM) ---------- */
+  async function carregarEntregas() {
+    if (modo !== 'servidor') {
+      setEntregas(null);
+      setEntregasNota('A fila de entregas fica no servidor — entre pelo modo servidor para vê-la aqui.');
+      return;
+    }
+    try {
+      const r = await fetch(API_RAIZ + '/api/entregas?status=' + encodeURIComponent(filtroEntregas), { headers: cabecalhoAuth() });
+      if (r.status === 401) { setEntregas(null); setEntregasNota('Sessão expirou — entre de novo.'); return; }
+      if (!r.ok) throw new Error('http ' + r.status);
+      const dados = await r.json();
+      setEntregas(dados.entregas || []);
+      setEntregasNota('');
+    } catch (e) {
+      setEntregas(null);
+      setEntregasNota('Sem servidor para listar a fila agora.');
+    }
+  }
+
+  useEffect(() => {
+    if (logado && aba === 'entregas') carregarEntregas();
+  }, [logado, aba, filtroEntregas, modo]);
+
+  async function marcarEntrega(id, status) {
+    setEntregaEm(id);
+    try {
+      const r = await fetch(API_RAIZ + '/api/entregas/' + id + '/marcar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...cabecalhoAuth() },
+        body: JSON.stringify({ status })
+      });
+      if (r.ok) {
+        toastMsg('Entrega #' + id + ' → ' + (status === 'entregue' ? 'entregue' : 'falhou'));
+        await carregarEntregas();
+      } else if (r.status === 401) {
+        toastMsg('Sessão expirou — entre de novo.', false);
+      } else {
+        toastMsg('Não deu para marcar a entrega.', false);
+      }
+    } catch (e) {
+      toastMsg('Sem servidor para marcar a entrega.', false);
+    }
+    setEntregaEm(null);
+  }
+
+  /* ---------- CSV dos pedidos (o dono baixa e abre no Excel) ---------- */
+  function exportarPedidosCsv() {
+    if (!pedidos || !pedidos.length) { toastMsg('Sem pedidos no filtro atual.', false); return; }
+    const esc = (v) => '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"';
+    const linhas = [['codigo', 'criado_em', 'status', 'itens', 'subtotal', 'desconto_pct', 'total', 'cupom', 'player_id', 'discord_tag', 'pago_em', 'mp_id']];
+    for (const p of pedidos) {
+      linhas.push([
+        p.id, p.criadoEm, p.status,
+        (p.itens || []).map((i) => i.nome + ' x' + i.quantidade).join(' | '),
+        p.subtotal, p.descontoPct, p.total, p.cupom || '',
+        p.playerId || '', p.discordTag || p.discordId || '',
+        p.pagoEm || '', p.mpId || ''
+      ]);
+    }
+    const csv = '\ufeff' + linhas.map((l) => l.map(esc).join(';')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pedidos-gh-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toastMsg('CSV exportado.');
+  }
 
   async function mudarStatusPedido(codigo, status) {
     setTrocaEm(codigo);
@@ -537,7 +645,7 @@ export default function App() {
       produtos: [...r.produtos, {
         categoria: r.categorias.length ? r.categorias[0].id : 'vips',
         nome: 'NOVO PRODUTO', preco: 9.99, precoAntigo: '',
-        icone: 'package', cor1: '#2a2030', cor2: '#141118', tag: ''
+        icone: 'package', cor1: '#2a2030', cor2: '#141118', tag: '', imagem: '', descricao: ''
       }]
     })),
     depoimentos: () => setRascunho((r) => ({
@@ -773,7 +881,7 @@ export default function App() {
           {/* PRODUTOS */}
           <section className={`secao${aba === 'produtos' ? ' ativa' : ''}`}>
             <h2>Produtos</h2>
-            <p className="secao-dica">Preço antigo vazio = sem promoção. Cores = gradiente da capa do card. Campos: categoria · nome · preço · preço antigo · ícone · cor 1 · cor 2 · selo.</p>
+            <p className="secao-dica">Preço antigo vazio = sem promoção. Cores = gradiente da capa do card. Imagem e descrição aparecem na página do produto (opcional).</p>
             <div className="empilhador">
               {cfg.produtos.map((p, i) => (
                 <Linha key={i} onExcluir={() => excluirLinha('produtos', i)}>
@@ -787,6 +895,8 @@ export default function App() {
                   <input type="color" className="b-cor" title="Cor 1 do gradiente" value={p.cor1 || (p.cores ? p.cores[0] : '#2a2030')} onChange={(e) => editarLinha('produtos', i, 'cor1', e.target.value)} />
                   <input type="color" className="b-cor" title="Cor 2 do gradiente" value={p.cor2 || (p.cores ? p.cores[1] : '#141118')} onChange={(e) => editarLinha('produtos', i, 'cor2', e.target.value)} />
                   <input className="campo b-medio" placeholder="selo (opcional)" value={p.tag || ''} onChange={(e) => editarLinha('produtos', i, 'tag', e.target.value)} />
+                  <input className="campo b-largo campo-mono" placeholder="URL da imagem (opcional)" value={p.imagem || ''} onChange={(e) => editarLinha('produtos', i, 'imagem', e.target.value)} />
+                  <input className="campo b-largo" placeholder="Descrição curta (opcional)" value={p.descricao || ''} onChange={(e) => editarLinha('produtos', i, 'descricao', e.target.value)} />
                 </Linha>
               ))}
             </div>
@@ -827,6 +937,66 @@ export default function App() {
               ))}
             </div>
             <button type="button" className="btn btn-fantasma btn-add" onClick={addLinha.links}><Icone nome="plus" /> Adicionar link</button>
+          </section>
+
+          {/* ESTATÍSTICAS */}
+          <section className={`secao${aba === 'estatisticas' ? ' ativa' : ''}`}>
+            <h2>Estatísticas</h2>
+            <p className="secao-dica">Números reais do servidor: faturamento por dia (últimos 30 dias, só pedidos pagos/entregues), produtos mais vendidos e saúde da loja.</p>
+            <div className="pedidos-barra">
+              <button type="button" className="btn btn-fantasma" onClick={carregarStats}><Icone nome="refresh-cw" /> Atualizar</button>
+            </div>
+            <div>
+              {statsNota ? <p className="pedidos-vazio">{statsNota}</p> : null}
+              {!statsNota && stats ? (
+                <>
+                  <div className="stats-cards">
+                    <div className="stats-card"><span className="stats-card-valor">{stats.pedidosHoje}</span><span className="stats-card-rotulo">Pedidos hoje</span></div>
+                    <div className="stats-card">
+                      <span className="stats-card-valor">{dinheiro((stats.porDia || []).reduce((a, d) => a + Number(d.total || 0), 0))}</span>
+                      <span className="stats-card-rotulo">Faturado (30 dias)</span>
+                    </div>
+                    <div className="stats-card"><span className="stats-card-valor">{dinheiro(stats.ticketMedio)}</span><span className="stats-card-rotulo">Ticket médio</span></div>
+                    <div className="stats-card"><span className="stats-card-valor">{stats.clientesUnicos}</span><span className="stats-card-rotulo">Clientes únicos</span></div>
+                  </div>
+
+                  <h3 className="secao-subtitulo"><Icone nome="bar-chart-3" /> Faturamento por dia</h3>
+                  {(stats.porDia || []).length === 0 ? (
+                    <p className="pedidos-vazio">Nenhuma venda paga nos últimos 30 dias.</p>
+                  ) : (() => {
+                    const maximo = Math.max(...stats.porDia.map((d) => Number(d.total || 0)), 1);
+                    return (
+                      <div className="stats-grafico" role="img" aria-label="Faturamento por dia nos últimos 30 dias">
+                        {stats.porDia.map((d) => (
+                          <div className="stats-coluna" key={String(d.dia)} title={`${String(d.dia || '').slice(5)} · ${dinheiro(d.total)} · ${d.n} pedido(s)`}>
+                            <div className="stats-barra" style={{ height: Math.max(6, Math.round((Number(d.total || 0) / maximo) * 100)) + '%' }} />
+                            <span className="stats-dia">{String(d.dia || '').slice(8)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
+                  <h3 className="secao-subtitulo"><Icone nome="trophy" /> Mais vendidos</h3>
+                  {(stats.topProdutos || []).length === 0 ? (
+                    <p className="pedidos-vazio">Sem vendas pagas para contar ainda.</p>
+                  ) : (() => {
+                    const maxQ = Math.max(...stats.topProdutos.map((t) => Number(t.quantidade || 0)), 1);
+                    return (
+                      <div className="stats-top">
+                        {stats.topProdutos.map((t, i) => (
+                          <div className="stats-top-linha" key={t.nome}>
+                            <span className="stats-top-nome">{i + 1}. {t.nome}</span>
+                            <span className="stats-top-barra"><span style={{ width: Math.round((Number(t.quantidade || 0) / maxQ) * 100) + '%' }} /></span>
+                            <span className="stats-top-qtd">{t.quantidade}×</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </>
+              ) : null}
+            </div>
           </section>
 
           {/* PEDIDOS */}
@@ -882,6 +1052,53 @@ export default function App() {
                     {p.pagoEm ? <span>pago {String(p.pagoEm).slice(0, 16).replace('T', ' ')}</span> : null}
                     {p.mpId ? <span className="pedido-mp">MP {p.mpId}</span> : null}
                     <strong className="pedido-total">{dinheiro(p.total)}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ENTREGAS */}
+          <section className={`secao${aba === 'entregas' ? ' ativa' : ''}`}>
+            <h2>Entregas</h2>
+            <p className="secao-dica">Fila que o servidor do jogo consome (a mais antiga primeiro). Servidor offline? Marque a entrega na mão: <strong>Entregue</strong> ou <strong>Falhou</strong>.</p>
+            <div className="pedidos-barra">
+              <select className="campo campo-curto" aria-label="Filtrar por status da entrega" value={filtroEntregas} onChange={(e) => setFiltroEntregas(e.target.value)}>
+                <option value="pendente">Pendentes</option>
+                <option value="entregue">Entregues</option>
+                <option value="falhou">Falharam</option>
+                <option value="todos">Todas</option>
+              </select>
+              <button type="button" className="btn btn-fantasma" onClick={carregarEntregas}><Icone nome="refresh-cw" /> Atualizar</button>
+            </div>
+            <div>
+              {entregasNota ? <p className="pedidos-vazio">{entregasNota}</p> : null}
+              {!entregasNota && entregas && entregas.length === 0 ? <p className="pedidos-vazio">Nenhuma entrega nessa lista.</p> : null}
+              {(entregas || []).map((en) => (
+                <div className="pedido-linha" key={en.id}>
+                  <div className="pedido-topo">
+                    <span className="pedido-codigo">#{en.id} · {en.pedidoCodigo}</span>
+                    <span className="pedido-quando">{String(en.criadoEm || '').slice(0, 16).replace('T', ' ')}</span>
+                    <span className={`chip-status chip-${en.status}`}>{ROTULOS_ENTREGA[en.status] || en.status}</span>
+                    {en.status === 'pendente' ? (
+                      <span className="entrega-acoes">
+                        <button type="button" className="btn btn-fantasma btn-mini" disabled={entregaEm === en.id} onClick={() => marcarEntrega(en.id, 'entregue')}>
+                          <Icone nome="check" /> Entregue
+                        </button>
+                        <button type="button" className="btn btn-fantasma btn-mini" disabled={entregaEm === en.id} onClick={() => marcarEntrega(en.id, 'falhou')}>
+                          <Icone nome="x" /> Falhou
+                        </button>
+                      </span>
+                    ) : (
+                      <span className="pedido-quando entrega-quando">{en.entregueEm ? 'marcada ' + String(en.entregueEm).slice(0, 16).replace('T', ' ') : ''}</span>
+                    )}
+                  </div>
+                  <div className="pedido-itens">
+                    <span className="pedido-item">{en.nome} <em>× {en.quantidade}</em></span>
+                  </div>
+                  <div className="pedido-pe">
+                    {en.playerId ? <span>ID {en.playerId}</span> : null}
+                    {en.discordId ? <span>Discord {en.discordId}</span> : null}
                   </div>
                 </div>
               ))}

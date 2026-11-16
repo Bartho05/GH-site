@@ -183,7 +183,9 @@ function normalizaConfig(entrada) {
         precoAntigo,
         icone: nomeIcone(p && p.icone, 'package'),
         cores: [hexCor(p && p.cores && p.cores[0], '#2a2030'), hexCor(p && p.cores && p.cores[1], '#141118')],
-        tag: p && p.tag ? texto(p.tag, 24) : ''
+        tag: p && p.tag ? texto(p.tag, 24) : '',
+        imagem: urlSegura(p && p.imagem, ''),
+        descricao: texto(p && p.descricao, 300)
       };
     });
   }

@@ -311,6 +311,87 @@ test('auditoria registra o que aconteceu e é protegida', async () => {
   assert.ok(r.dados.registros.every((a) => a.criadoEm));
 });
 
+/* ----- estatísticas (melhorias-v2) ----- */
+test('stats do painel: protegida e com números coerentes', async () => {
+  const semToken = await pede('/api/stats');
+  assert.equal(semToken.status, 401);
+
+  const r = await pede('/api/stats', { token });
+  assert.equal(r.status, 200);
+  assert.ok(Array.isArray(r.dados.porDia));
+  assert.ok(Array.isArray(r.dados.topProdutos));
+  assert.ok(r.dados.porDia.every((d) => d.dia && d.n >= 1 && d.total >= 0));
+  assert.ok(r.dados.topProdutos.every((t) => t.nome && t.quantidade >= 1));
+  assert.ok(r.dados.topProdutos.some((t) => t.nome === 'VIP OURO – 30 DIAS'));
+  assert.ok(typeof r.dados.pedidosHoje === 'number');
+  assert.ok(typeof r.dados.clientesUnicos === 'number');
+  assert.ok(typeof r.dados.ticketMedio === 'number' && r.dados.ticketMedio > 0);
+});
+
+/* ----- entregas no painel (melhorias-v2) ----- */
+test('entregas no painel: protegida, lista, filtra e marca na mão', async () => {
+  api.zerarLimitesCheckout();
+  const semToken = await pede('/api/entregas');
+  assert.equal(semToken.status, 401);
+
+  /* novo pedido pago → nova entrega pendente na fila */
+  const ok = await pede('/api/checkout', {
+    metodo: 'POST',
+    corpo: { itens: [{ nome: 'VIP OURO – 30 DIAS', quantidade: 1 }], playerId: '88' }
+  });
+  assert.equal(ok.status, 201);
+  const pago = await pede('/api/orders/' + ok.dados.pedido.id, { metodo: 'PATCH', token, corpo: { status: 'pago' } });
+  assert.equal(pago.status, 200);
+
+  const pendentes = await pede('/api/entregas?status=pendente', { token });
+  assert.equal(pendentes.status, 200);
+  const minha = pendentes.dados.entregas.find((e) => e.pedidoCodigo === ok.dados.pedido.id);
+  assert.ok(minha && minha.playerId === '88' && minha.status === 'pendente');
+
+  /* marcar na mão exige sessão */
+  const semSessao = await pede('/api/entregas/' + minha.id + '/marcar', { metodo: 'POST', corpo: { status: 'entregue' } });
+  assert.equal(semSessao.status, 401);
+
+  const marca = await pede('/api/entregas/' + minha.id + '/marcar', { metodo: 'POST', token, corpo: { status: 'entregue' } });
+  assert.equal(marca.status, 200);
+
+  const statusRuim = await pede('/api/entregas/' + minha.id + '/marcar', { metodo: 'POST', token, corpo: { status: 'virou-ouro' } });
+  assert.equal(statusRuim.status, 400);
+
+  const inexistente = await pede('/api/entregas/999999/marcar', { metodo: 'POST', token, corpo: { status: 'falhou' } });
+  assert.equal(inexistente.status, 404);
+
+  /* filtro 'todos' enxerga pendentes e resolvidas */
+  const todas = await pede('/api/entregas?status=todos', { token });
+  assert.equal(todas.status, 200);
+  assert.ok(todas.dados.entregas.length >= 2);
+});
+
+/* ----- minha conta (melhorias-v2) ----- */
+test('minha conta: histórico do próprio Discord via sessão', async () => {
+  const semSessao = await pede('/api/minha/conta');
+  assert.equal(semSessao.status, 404);
+
+  const dc = api.criarSessaoDiscord('555666', 'testador');
+  const compra = await pede('/api/checkout', {
+    metodo: 'POST',
+    headers: { 'X-Discord-Token': dc },
+    corpo: { itens: [{ nome: 'VIP OURO – 30 DIAS', quantidade: 2 }], playerId: '99' }
+  });
+  assert.equal(compra.status, 201);
+
+  const conta = await pede('/api/minha/conta', { headers: { 'X-Discord-Token': dc } });
+  assert.equal(conta.status, 200);
+  assert.equal(conta.dados.tag, 'testador');
+  assert.ok(conta.dados.pedidos.some((p) => p.id === compra.dados.pedido.id));
+  assert.ok(conta.dados.pedidos.every((p) =>
+    ['id', 'status', 'total', 'itens', 'criadoEm'].every((k) => k in p)
+  ));
+
+  const falsa = await pede('/api/minha/conta', { headers: { 'X-Discord-Token': 'nao-existe' } });
+  assert.equal(falsa.status, 404);
+});
+
 /* ----- senha ----- */
 test('troca de senha exige a atual certa e a nova cuidada', async () => {
   const errada = await pede('/api/auth/trocar-senha', { metodo: 'POST', token, corpo: { atual: 'errada', nova: 'novaSenha1' } });

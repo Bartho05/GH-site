@@ -300,6 +300,57 @@ module.exports = {
     return { porStatus, quantidade, arrecadado: Math.round(arrecadado * 100) / 100 };
   },
 
+  /* estatísticas da aba Estatísticas: faturamento por dia (30 dias),
+     produtos mais vendidos, clientes únicos, ticket médio */
+  estatisticas() {
+    const porDia = abrir().prepare(`
+      SELECT date(criado_em) AS dia, COUNT(*) AS n, COALESCE(SUM(total), 0) AS total
+      FROM pedidos
+      WHERE status IN ('pago', 'entregue') AND criado_em >= datetime('now', '-29 days')
+      GROUP BY dia ORDER BY dia ASC
+    `).all();
+
+    const topProdutos = (() => {
+      const contagem = new Map();
+      for (const r of abrir().prepare(`
+        SELECT itens_json FROM pedidos WHERE status IN ('pago', 'entregue') ORDER BY criado_em DESC LIMIT 500
+      `).all()) {
+        try {
+          for (const i of JSON.parse(r.itens_json || '[]')) {
+            if (!i || !i.nome) continue;
+            contagem.set(i.nome, (contagem.get(i.nome) || 0) + (Number(i.quantidade) || 1));
+          }
+        } catch (e) { /* linha ruim: pula */ }
+      }
+      return [...contagem.entries()]
+        .map(([nome, quantidade]) => ({ nome, quantidade }))
+        .sort((a, b) => b.quantidade - a.quantidade)
+        .slice(0, 8);
+    })();
+
+    const linha = abrir().prepare(`
+      SELECT
+        (SELECT COUNT(*) FROM pedidos WHERE date(criado_em) = date('now')) AS hoje,
+        (SELECT COUNT(DISTINCT player_id) FROM pedidos WHERE player_id IS NOT NULL) AS clientes,
+        (SELECT COALESCE(AVG(total), 0) FROM pedidos WHERE status IN ('pago', 'entregue')) AS ticket
+    `).get();
+
+    return {
+      porDia,
+      topProdutos,
+      pedidosHoje: linha.hoje,
+      clientesUnicos: linha.clientes,
+      ticketMedio: Math.round(linha.ticket * 100) / 100
+    };
+  },
+
+  /* pedidos do próprio cliente (conta do Discord) */
+  listarPedidosPorDiscord(discordId, limite = 100) {
+    return abrir().prepare(`
+      SELECT * FROM pedidos WHERE discord_id = ? ORDER BY criado_em DESC, rowid DESC LIMIT ?
+    `).all(String(discordId), limite).map(linhaPedido);
+  },
+
   /* ----- fila de entregas (o resource FiveM consome isto na Fase 3) ----- */
   addEntrega({ pedidoCodigo, itens, playerId, discordId, criadoEm }) {
     const insere = abrir().prepare(`
@@ -320,10 +371,16 @@ module.exports = {
     }
   },
 
-  listarEntregas({ status = 'pendente', limite = 100 } = {}) {
-    if (!STATUSES_ENTREGA.includes(status)) status = 'pendente';
-    return abrir().prepare('SELECT * FROM entregas WHERE status = ? ORDER BY id LIMIT ?')
-      .all(status, limite)
+  listarEntregas({ status = 'pendente', limite = 100, ordem = 'desc' } = {}) {
+    let sql = 'SELECT * FROM entregas';
+    const params = [];
+    if (status !== 'todos' && STATUSES_ENTREGA.includes(status)) {
+      sql += ' WHERE status = ?';
+      params.push(status);
+    }
+    sql += ordem === 'asc' ? ' ORDER BY id ASC LIMIT ?' : ' ORDER BY id DESC LIMIT ?';
+    params.push(limite);
+    return abrir().prepare(sql).all(...params)
       .map((r) => ({
         id: r.id,
         pedidoCodigo: r.pedido_codigo,

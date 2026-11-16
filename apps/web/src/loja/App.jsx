@@ -186,8 +186,12 @@ function CardProduto({ p, comPromo, idx, onAdd }) {
 
   return (
     <Reveal tag="article" className="produto-card" id={slugProduto(p.nome)} delay={Math.min(idx * 0.05, 0.3)}>
-      <div className="produto-marcas" aria-hidden="true">
-        <div className="produto-marca-fig" style={{ '--c1': c1, '--c2': c2 }}><Icone nome={p.icone} /></div>
+      <div className="produto-marcas" aria-hidden={p.imagem ? undefined : 'true'}>
+        <div className={`produto-marca-fig${p.imagem ? ' com-imagem' : ''}`} style={{ '--c1': c1, '--c2': c2 }}>
+          {p.imagem
+            ? <img className="produto-img" src={p.imagem} alt={p.nome} loading="lazy" />
+            : <Icone nome={p.icone} />}
+        </div>
         {desconto ? <span className="marca-desconto">{desconto}</span> : null}
         {p.tag ? <span className="marca-tag"><Icone nome="flame" />{p.tag}</span> : null}
         {comPromo && desconto ? (
@@ -195,7 +199,11 @@ function CardProduto({ p, comPromo, idx, onAdd }) {
         ) : null}
       </div>
       <div className="produto-corpo">
-        <h3 className="produto-nome">{p.nome}</h3>
+        <h3 className="produto-nome">
+          <Link className="produto-nome-link" to={'/produto/' + slugProduto(p.nome).replace(/^produto-/, '')}>
+            {p.nome}
+          </Link>
+        </h3>
         <p className="produto-meta"><Icone nome="zap" />Entrega instantânea</p>
         <div className="produto-preco">
           {p.precoAntigo ? <span className="preco-antigo">{BRL(p.precoAntigo)}</span> : null}
@@ -507,10 +515,10 @@ export default function App() {
               </li>
 
               <li>
-                <a href="#entrar" className="btn btn-secundario btn-entrar" aria-label="Entrar na sua conta">
+                <Link to="/conta" className="btn btn-secundario btn-entrar" aria-label="Entrar na sua conta">
                   <Icone nome="user" className="btn-icone-expandida" />
                   <span className="btn-rotulo">Entrar</span>
-                </a>
+                </Link>
               </li>
               <li>
                 <button type="button" className="btn btn-primario" aria-label="Abrir carrinho" onClick={() => setCarrinhoAberto(true)}>

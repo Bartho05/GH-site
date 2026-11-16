@@ -54,14 +54,28 @@ function sessaoDiscord(token) {
   return s;
 }
 
-/* states anti-CSRF do OAuth (10 min, uso único) */
-const estadosDiscord = new Map(); // state → expira
+/* states anti-CSRF do OAuth (10 min, uso único) — guardam para onde voltar */
+const estadosDiscord = new Map(); // state → { expira, volta }
 
 function estadoDiscordOk(state) {
-  const expira = estadosDiscord.get(state);
-  if (!expira || expira < Date.now()) return false;
+  const s = estadosDiscord.get(state);
+  if (!s || s.expira < Date.now()) return false;
   estadosDiscord.delete(state); // uso único
-  return true;
+  return s;
+}
+
+/* cria a sessão do Discord (usada pelo callback e pelos testes) */
+function criarSessaoDiscord(id, tag) {
+  const token = crypto.randomBytes(24).toString('hex');
+  sessoesDiscord.set(token, {
+    id: String(id).slice(0, 25),
+    tag: String(tag || 'discord').slice(0, 40),
+    expira: Date.now() + 30 * 60 * 1000
+  });
+  if (sessoesDiscord.size > 500) {
+    for (const [k, s] of sessoesDiscord) if (s.expira < Date.now()) sessoesDiscord.delete(k);
+  }
+  return token;
 }
 
 /* chave do servidor FiveM — comparação em tempo constante (sha256 antes) */
@@ -172,9 +186,33 @@ async function despachar(req, res, ctx) {
     return enviar(200, { ok: true });
   }
 
+  /* POST /api/entregas/:id/marcar — a staff marca a entrega na mão pelo painel */
+  const matchEntregaAdmin = pathname.match(/^\/api\/entregas\/(\d+)\/marcar$/);
+  if (matchEntregaAdmin && metodo === 'POST') {
+    if (!logado(req)) return enviar(401, { erro: 'precisa estar logado (Bearer do /api/auth/login)' });
+    const status = corpo && typeof corpo.status === 'string' ? corpo.status : 'entregue';
+    if (!db.STATUSES_ENTREGA.includes(status)) return enviar(400, { erro: 'status inválido (use pendente, entregue ou falhou)' });
+    if (!db.marcarEntrega(Number(matchEntregaAdmin[1]), status)) return enviar(404, { erro: 'entrega não encontrada' });
+    db.registrarAuditoria('entrega_manual', 'entrega #' + matchEntregaAdmin[1] + ' → ' + status + ' (painel)');
+    return enviar(200, { ok: true });
+  }
+
   switch (rota) {
     case 'GET /api/health':
       return enviar(200, { ok: true, nome: 'gh-roleplay-api', hora: new Date().toISOString() });
+
+    /* GET /api/stats — números da aba Estatísticas */
+    case 'GET /api/stats': {
+      if (!logado(req)) return enviar(401, { erro: 'precisa estar logado (Bearer do /api/auth/login)' });
+      return enviar(200, db.estatisticas());
+    }
+
+    /* GET /api/entregas — fila completa no painel */
+    case 'GET /api/entregas': {
+      if (!logado(req)) return enviar(401, { erro: 'precisa estar logado (Bearer do /api/auth/login)' });
+      const status = url.searchParams.get('status') || 'pendente';
+      return enviar(200, { entregas: db.listarEntregas({ status, limite: 200, ordem: 'desc' }) });
+    }
 
     case 'GET /api/config':
       /* recursos avisa ao frontend o que este servidor tem ligado;
@@ -248,7 +286,8 @@ async function despachar(req, res, ctx) {
 
     /* ---------- OAuth Discord (Fase 2) ---------- */
 
-    /* GET /api/auth/discord — manda o cliente para o Discord */
+    /* GET /api/auth/discord — manda o cliente para o Discord
+       (?volta=conta faz o OAuth voltar para a página Minha conta) */
     case 'GET /api/auth/discord': {
       const clientId = process.env.DISCORD_CLIENT_ID;
       const origem = (process.env.GHRP_ORIGIN || '').replace(/\/+$/, '');
@@ -257,8 +296,9 @@ async function despachar(req, res, ctx) {
           erro: 'Login com Discord não configurado (defina DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET e GHRP_ORIGIN).'
         });
       }
+      const volta = url.searchParams.get('volta') === 'conta' ? '/conta' : '/checkout';
       const state = crypto.randomBytes(16).toString('hex');
-      estadosDiscord.set(state, Date.now() + 10 * 60 * 1000);
+      estadosDiscord.set(state, { expira: Date.now() + 10 * 60 * 1000, volta });
       const urlAutoriza = 'https://discord.com/oauth2/authorize?' + new URLSearchParams({
         client_id: clientId,
         redirect_uri: origem + '/api/auth/discord/callback',
@@ -277,7 +317,8 @@ async function despachar(req, res, ctx) {
       if (!clientId || !clientSecret || !origem) return redirecionar('/checkout?erro=discord');
       if (url.searchParams.get('error')) return redirecionar('/checkout?erro=discord');
       const state = url.searchParams.get('state') || '';
-      if (!estadoDiscordOk(state)) return redirecionar('/checkout?erro=discord');
+      const estado = estadoDiscordOk(state);
+      if (!estado) return redirecionar('/checkout?erro=discord');
       const code = url.searchParams.get('code') || '';
 
       let perfil = null;
@@ -302,18 +343,9 @@ async function despachar(req, res, ctx) {
         }
       } catch (e) { /* rede caiu → volta com erro */ }
 
-      if (!perfil || !perfil.id) return redirecionar('/checkout?erro=discord');
-
-      const token = crypto.randomBytes(24).toString('hex');
-      sessoesDiscord.set(token, {
-        id: String(perfil.id),
-        tag: String(perfil.global_name || perfil.username || 'discord').slice(0, 40),
-        expira: Date.now() + 30 * 60 * 1000
-      });
-      if (sessoesDiscord.size > 500) {
-        for (const [k, s] of sessoesDiscord) if (s.expira < Date.now()) sessoesDiscord.delete(k);
-      }
-      return redirecionar('/checkout?dc=' + token);
+      if (!perfil || !perfil.id) return redirecionar(estado.volta + '?erro=discord');
+      const token = criarSessaoDiscord(perfil.id, perfil.global_name || perfil.username || 'discord');
+      return redirecionar(estado.volta + '?dc=' + token);
     }
 
     /* GET /api/auth/discord/sessao — o checkout consulta quem logou */
@@ -373,12 +405,26 @@ async function despachar(req, res, ctx) {
 
     /* ---------- entregas (Fase 3) ---------- */
 
-    /* GET /api/deliveries/queue — o servidor FiveM busca a fila */
+    /* GET /api/deliveries/queue — o servidor FiveM busca a fila (mais antiga primeiro) */
     case 'GET /api/deliveries/queue': {
       if (!process.env.GHRP_SERVER_KEY) return enviar(503, { erro: 'GHRP_SERVER_KEY não configurada no backend.' });
       if (!servidorOk(req)) return enviar(401, { erro: 'chave do servidor inválida (header X-Server-Key)' });
       const status = url.searchParams.get('status') || 'pendente';
-      return enviar(200, { entregas: db.listarEntregas({ status, limite: 50 }) });
+      return enviar(200, { entregas: db.listarEntregas({ status, limite: 50, ordem: 'asc' }) });
+    }
+
+    /* GET /api/minha/conta — histórico do próprio cliente (sessão Discord) */
+    case 'GET /api/minha/conta': {
+      const s = sessaoDiscord(req.headers['x-discord-token']);
+      if (!s) return enviar(404, { erro: 'sessão Discord inexistente ou expirada' });
+      const pedidos = db.listarPedidosPorDiscord(s.id).map((p) => ({
+        id: p.id,
+        status: p.status,
+        total: p.total,
+        itens: p.itens,
+        criadoEm: p.criadoEm
+      }));
+      return enviar(200, { tag: s.tag, pedidos });
     }
 
     case 'POST /api/orders': {
@@ -437,4 +483,4 @@ async function despachar(req, res, ctx) {
   }
 }
 
-module.exports = { despachar, zerarLimitesCheckout };
+module.exports = { despachar, zerarLimitesCheckout, criarSessaoDiscord };
