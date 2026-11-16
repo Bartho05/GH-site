@@ -9,7 +9,7 @@ import { Link } from 'react-router';
 import { CONFIG_BASE } from '../config-base.mjs';
 import {
   mesclar, lerConfigLocal, escreverConfigLocal, puxarConfigServidor,
-  API_RAIZ, BRL, slugProduto, fimDoDia, irParaProduto
+  BRL, slugProduto, fimDoDia, irParaProduto
 } from '../lib/util.js';
 import Icone, { Coroa, FiguraPodio, Estrelas, CheckSvg } from '../lib/Icone.jsx';
 import { Reveal, Contador, useDatilo } from './efeitos.jsx';
@@ -34,6 +34,34 @@ function usarFecharFora(ref, aberto, fechar) {
     document.addEventListener('click', aoClicar);
     return () => document.removeEventListener('click', aoClicar);
   }, [aberto]);
+}
+
+/* =========================================================
+   Banner de consentimento (Fase 4 / LGPD)
+   ========================================================= */
+function BannerConsentimento() {
+  const [aceito, setAceito] = useState(() => {
+    try { return localStorage.getItem('gh_consentimento') === '1'; } catch (e) { return true; }
+  });
+  if (aceito) return null;
+  return (
+    <div className="consentimento" role="region" aria-label="Aviso de cookies e dados">
+      <p>
+        Usamos cookies e armazenamento local para lembrar seu tema, seu carrinho e processar
+        pedidos. Detalhes na <Link to="/privacidade">Política de Privacidade</Link>.
+      </p>
+      <button
+        type="button"
+        className="btn btn-primario"
+        onClick={() => {
+          try { localStorage.setItem('gh_consentimento', '1'); } catch (e) {}
+          setAceito(true);
+        }}
+      >
+        Aceito
+      </button>
+    </div>
+  );
 }
 
 /* ---------- carrinho (localStorage) ---------- */
@@ -204,9 +232,6 @@ function QrFake() {
 export default function App() {
   const [cfg, setCfg] = useState(CONFIG_INICIAL);
   const [carrinho, setCarrinho] = useState(() => carregarCarrinho(CONFIG_INICIAL));
-  const [pedidoOk, setPedidoOk] = useState(null);
-  const [enviando, setEnviando] = useState(false);
-  const [erroCheckout, setErroCheckout] = useState(false);
   const [carrinhoAberto, setCarrinhoAberto] = useState(false);
 
   const [buscaMobileAberta, setBuscaMobileAberta] = useState(false);
@@ -294,7 +319,6 @@ export default function App() {
   const salvarCarrinho = (lista) => { try { localStorage.setItem('gh_carrinho', JSON.stringify(lista)); } catch (e) {} };
 
   const adicionar = (nome) => {
-    setPedidoOk(null);
     setCarrinho((atual) => { const nova = [...atual, nome]; salvarCarrinho(nova); return nova; });
   };
 
@@ -318,35 +342,6 @@ export default function App() {
   }, 0);
 
   const unicos = [...new Set(carrinho)].sort((a, b) => qtdDe(b) - qtdDe(a));
-
-  async function finalizarCompra() {
-    if (!carrinho.length || enviando) return;
-    const contagens = {};
-    carrinho.forEach((nome) => { contagens[nome] = (contagens[nome] || 0) + 1; });
-    const itens = Object.entries(contagens).map(([nome, quantidade]) => ({ nome, quantidade }));
-
-    setEnviando(true);
-    let resposta = null;
-    try {
-      const r = await fetch(API_RAIZ + '/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itens, cupom: cfg.cupom.codigo })
-      });
-      if (r.ok) resposta = await r.json();
-    } catch (e) { /* sem servidor */ }
-    setEnviando(false);
-
-    if (resposta && resposta.pedido) {
-      const p = resposta.pedido;
-      salvarCarrinho([]);
-      setCarrinho([]);
-      setPedidoOk(p);
-    } else {
-      setErroCheckout(true);
-      setTimeout(() => setErroCheckout(false), 2600);
-    }
-  }
 
   /* ---------- tema + animações ---------- */
   const escolherTema = (id) => {
@@ -567,14 +562,7 @@ export default function App() {
           </div>
 
           <div className="carrinho-lista">
-            {pedidoOk && carrinho.length === 0 ? (
-              <div className="carrinho-vazio pedido-ok">
-                <CheckSvg />
-                <p><strong>Pedido {pedidoOk.id} recebido!</strong></p>
-                <p>Total {BRL(pedidoOk.total)}{pedidoOk.descontoPct ? ` · ${pedidoOk.descontoPct}% OFF` : ''}</p>
-                <p className="pedido-dica">Envie o comprovante no chat do servidor para o staff confirmar.</p>
-              </div>
-            ) : unicos.length === 0 ? (
+            {unicos.length === 0 ? (
               <div className="carrinho-vazio">
                 <Icone nome="shopping-cart" />
                 Seu carrinho está vazio.<br />Explore o catálogo para começar.
@@ -617,16 +605,15 @@ export default function App() {
               <span>Total</span>
               <strong>{BRL(soma)}</strong>
             </div>
-            <a
-              href="#checkout"
+            <Link
+              to="/checkout"
               className="btn btn-primario btn-grande"
-              onClick={(e) => { e.preventDefault(); finalizarCompra(); }}
-              style={enviando ? { pointerEvents: 'none', opacity: 0.6 } : undefined}
+              aria-label="Ir para o checkout"
+              onClick={() => setCarrinhoAberto(false)}
+              style={unicos.length === 0 ? { pointerEvents: 'none', opacity: 0.6 } : undefined}
             >
-              {erroCheckout
-                ? 'Sem servidor — checkout indisponível'
-                : (<><Icone nome="lock" /> Finalizar compra</>)}
-            </a>
+              <Icone nome="lock" /> Finalizar compra
+            </Link>
             <button type="button" className="carrinho-continuar" onClick={() => setCarrinhoAberto(false)}>Continuar comprando</button>
           </div>
         </aside>
@@ -807,6 +794,7 @@ export default function App() {
           <nav className="rodape-coluna" aria-label="Ajuda">
             <p className="rodape-titulo">Ajuda</p>
             <a href="#termos">Termos e condições</a>
+            <Link to="/privacidade">Política de Privacidade</Link>
             <a href="#contato">Contato</a>
             <Link to="/admin">Painel do dono</Link>
           </nav>
@@ -828,6 +816,9 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* ===== Banner de consentimento (LGPD) ===== */}
+      <BannerConsentimento />
 
       {/* ===== Aba de cupom (esquerda) ===== */}
       <div className="cupom-widget" id="cupom-widget" ref={cupomRef}>

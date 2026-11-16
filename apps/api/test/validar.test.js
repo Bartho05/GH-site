@@ -81,6 +81,32 @@ test('pedido: itens desconhecidos recusam', () => {
   assert.equal(r.ok, false);
 });
 
+test('config: campos do checkout são normalizados', () => {
+  const r = normalizaConfig({
+    checkout: {
+      chavePix: '  chave<b>suja</b>-pix-123  ',
+      tipoChavePix: 'email-falso',
+      instrucoesPix: 'Pague e <img>espere'
+    }
+  });
+  assert.equal(r.ok, true);
+  assert.equal(r.config.checkout.chavePix, 'chave suja -pix-123'); // sem < >
+  assert.equal(r.config.checkout.tipoChavePix, 'aleatoria');       // tipo inválido volta ao padrão
+  assert.equal(r.config.checkout.instrucoesPix, 'Pague e espere');
+
+  const limpa = normalizaConfig({ checkout: { chavePix: '', instrucoesPix: '' } });
+  assert.equal(limpa.config.checkout.chavePix, '');  // vazio apaga de propósito
+  assert.equal(limpa.config.checkout.instrucoesPix, '');
+});
+
+test('pedido: tag do Discord é aceita, lixo é descartado', () => {
+  const cfg = { produtos: [{ nome: 'P', preco: 1 }], cupom: { codigo: '', desconto: 0, minimo: 0 } };
+  const ok = normalizaPedido({ itens: [{ nome: 'P', quantidade: 1 }], discordTag: 'Player#1234' }, cfg);
+  assert.equal(ok.pedido.discordTag, 'Player#1234');
+  const feio = normalizaPedido({ itens: [{ nome: 'P', quantidade: 1 }], discordTag: '<script>x</script>' }, cfg);
+  assert.equal(feio.pedido.discordTag, null);
+});
+
 test('pedido: cupom só vale acima do mínimo', () => {
   const cfg = { produtos: [{ nome: 'P', preco: 100 }], cupom: { codigo: 'BEMVINDO', desconto: 10, minimo: 150 } };
   const abaixo = normalizaPedido({ itens: [{ nome: 'P', quantidade: 1 }], cupom: 'bemvindo' }, cfg);

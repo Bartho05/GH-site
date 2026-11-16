@@ -122,3 +122,59 @@ test('fila de entregas: um item por linha, marca entregue', () => {
   assert.equal(db.marcarEntrega(9999, 'entregue'), false); // id que não existe
   assert.equal(db.marcarEntrega(fila[1].id, 'status-ruim'), false); // status fora da lista
 });
+
+/* ----- Fase 2: colunas novas + pagarPedido ----- */
+test('colunas novas existem em pedidos importados do legado', () => {
+  const p = db.pedidoPorCodigo('PED-LEGADO-1');
+  assert.equal(p.mpId, null);
+  assert.equal(p.pagoEm, null);
+  assert.equal(p.discordTag, null);
+});
+
+test('pagarPedido: marca pago, cria entregas e é idempotente', () => {
+  db.addPedido({
+    id: 'PED-PAGAR-1',
+    itens: [{ nome: 'VIP X', quantidade: 2 }],
+    subtotal: 30, descontoPct: 0, desconto: 0, total: 30, cupom: null,
+    playerId: '42', discordTag: 'Player#1234',
+    criadoEm: '2026-11-14T00:00:00.000Z'
+  });
+  const pago = db.pagarPedido('PED-PAGAR-1', { origem: 'teste' });
+  assert.equal(pago.status, 'pago');
+  assert.ok(pago.pagoEm);
+  assert.equal(pago.discordTag, 'Player#1234');
+
+  let fila = db.listarEntregas({ status: 'pendente' });
+  assert.equal(fila.filter((e) => e.pedidoCodigo === 'PED-PAGAR-1').length, 1);
+  assert.ok(fila.some((e) => e.pedidoCodigo === 'PED-PAGAR-1' && e.nome === 'VIP X' && e.quantidade === 2));
+
+  /* idempotente: pagar de novo não duplica a fila */
+  db.pagarPedido('PED-PAGAR-1');
+  fila = db.listarEntregas({ status: 'pendente' });
+  assert.equal(fila.filter((e) => e.pedidoCodigo === 'PED-PAGAR-1').length, 1);
+
+  /* pedido sem playerId entra pago, mas não gera entrega */
+  db.addPedido({
+    id: 'PED-SEMPLAYER',
+    itens: [{ nome: 'Y', quantidade: 1 }],
+    subtotal: 5, descontoPct: 0, desconto: 0, total: 5, cupom: null,
+    criadoEm: '2026-11-14T01:00:00.000Z'
+  });
+  db.pagarPedido('PED-SEMPLAYER');
+  assert.equal(db.pedidoPorCodigo('PED-SEMPLAYER').status, 'pago');
+  assert.ok(!db.listarEntregas({ status: 'pendente' }).some((e) => e.pedidoCodigo === 'PED-SEMPLAYER'));
+
+  assert.equal(db.pagarPedido('PED-NAO-EXISTE'), null);
+});
+
+test('auditoria: registra, lista em ordem nova e respeita o limite', () => {
+  db.registrarAuditoria('teste_primeira', 'um');
+  db.registrarAuditoria('teste_segunda', 'dois');
+
+  const lista = db.listarAuditoria();
+  assert.equal(lista[0].acao, 'teste_segunda'); // mais recente primeiro
+  assert.ok(lista.some((a) => a.acao === 'pedido_pago'));
+  assert.ok(lista.every((a) => a.acao && a.criadoEm));
+
+  assert.equal(db.listarAuditoria({ limite: 1 }).length, 1);
+});

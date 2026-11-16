@@ -80,7 +80,34 @@ function abrir() {
     CREATE INDEX IF NOT EXISTS idx_entregas_status ON entregas(status, id);
   `);
   semearOuImportar();
+  migrar();
   return db;
+}
+
+/* migrações leves: bancos antigos ganham as colunas/tabelas novas
+   sem perder nada (checagem pela PRAGMA table_info) */
+function colunas(tabela) {
+  return db.prepare('PRAGMA table_info(' + tabela + ')').all().map((c) => c.name);
+}
+
+function migrar() {
+  const tem = colunas('pedidos');
+  for (const [nome, tipo] of [
+    ['mp_id', 'TEXT'],
+    ['pago_em', 'TEXT'],
+    ['discord_tag', 'TEXT']
+  ]) {
+    if (!tem.includes(nome)) db.exec('ALTER TABLE pedidos ADD COLUMN ' + nome + ' ' + tipo + ';');
+  }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS auditoria (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      acao TEXT NOT NULL,
+      detalhe TEXT,
+      criado_em TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_auditoria_id ON auditoria(id DESC);
+  `);
 }
 
 /* Primeira execução: importa o store.json do backend antigo
@@ -141,6 +168,9 @@ function linhaPedido(r) {
     status: r.status,
     playerId: r.player_id || null,
     discordId: r.discord_id || null,
+    discordTag: r.discord_tag || null,
+    mpId: r.mp_id || null,
+    pagoEm: r.pago_em || null,
     criadoEm: r.criado_em
   };
 }
@@ -184,8 +214,8 @@ module.exports = {
   addPedido(pedido) {
     abrir().prepare(`
       INSERT INTO pedidos
-        (codigo, itens_json, subtotal, desconto_pct, desconto, total, cupom, status, player_id, discord_id, criado_em)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (codigo, itens_json, subtotal, desconto_pct, desconto, total, cupom, status, player_id, discord_id, discord_tag, mp_id, criado_em)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       pedido.id,
       JSON.stringify(pedido.itens || []),
@@ -197,6 +227,8 @@ module.exports = {
       pedido.status || 'pendente',
       pedido.playerId || null,
       pedido.discordId || null,
+      pedido.discordTag || null,
+      pedido.mpId || null,
       pedido.criadoEm || new Date().toISOString()
     );
     return clone(pedido);
@@ -224,6 +256,31 @@ module.exports = {
     const r = abrir().prepare('UPDATE pedidos SET status = ? WHERE codigo = ?').run(status, codigo);
     if (r.changes === 0) return null;
     return this.pedidoPorCodigo(codigo);
+  },
+
+  /* confirma o pagamento (webhook do Mercado Pago ou staff no painel).
+     Idempotente: um pedido pago nunca gera a fila de entregas 2x. */
+  pagarPedido(codigo, { mpId = null, origem = 'manual' } = {}) {
+    const pedido = this.pedidoPorCodigo(codigo);
+    if (!pedido) return null;
+    if (pedido.status === 'pago' || pedido.status === 'entregue') return pedido;
+    abrir().prepare(`
+      UPDATE pedidos SET status = 'pago', pago_em = ?, mp_id = COALESCE(?, mp_id) WHERE codigo = ?
+    `).run(new Date().toISOString(), mpId, codigo);
+    if (pedido.playerId) {
+      this.addEntrega({
+        pedidoCodigo: codigo,
+        itens: pedido.itens,
+        playerId: pedido.playerId,
+        discordId: pedido.discordId
+      });
+    }
+    this.registrarAuditoria('pedido_pago', codigo + (mpId ? ' · MP ' + mpId : ' · ' + origem));
+    return this.pedidoPorCodigo(codigo);
+  },
+
+  setMpIdPedido(codigo, mpId) {
+    abrir().prepare('UPDATE pedidos SET mp_id = ? WHERE codigo = ?').run(mpId || null, codigo);
   },
 
   /* números para o painel: quantos pedidos por status e quanto entrou de dinheiro */
@@ -286,5 +343,20 @@ module.exports = {
     const r = abrir().prepare('UPDATE entregas SET status = ?, entregue_em = ? WHERE id = ?')
       .run(status, entregueEm, id);
     return r.changes > 0;
+  },
+
+  /* ----- auditoria (Fase 4): trilha das ações admin/servidor ----- */
+  registrarAuditoria(acao, detalhe) {
+    abrir().prepare('INSERT INTO auditoria (acao, detalhe, criado_em) VALUES (?, ?, ?)')
+      .run(String(acao || '').slice(0, 64), detalhe ? String(detalhe).slice(0, 300) : null, new Date().toISOString());
+    /* guarda no máximo 2000 registros: corta os antigos */
+    abrir().prepare(`
+      DELETE FROM auditoria WHERE id <= (SELECT id FROM auditoria ORDER BY id DESC LIMIT 1 OFFSET 2000)
+    `).run();
+  },
+
+  listarAuditoria({ limite = 200 } = {}) {
+    return abrir().prepare('SELECT * FROM auditoria ORDER BY id DESC LIMIT ?').all(Math.min(Math.max(limite, 1), 1000))
+      .map((r) => ({ id: r.id, acao: r.acao, detalhe: r.detalhe, criadoEm: r.criado_em }));
   }
 };

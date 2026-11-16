@@ -64,6 +64,7 @@ function paraRascunho(cfg) {
     ...cfg,
     cupom: { ...CONFIG_BASE.cupom, ...(cfg.cupom || {}) },
     servidor: { ...CONFIG_BASE.servidor, ...(cfg.servidor || {}) },
+    checkout: { ...CONFIG_BASE.checkout, ...(cfg.checkout || {}) },
     _pagTexto: (cfg.pagamentos || []).join('\n'),
     _frasesTexto: (cfg.frasesHero || []).map((f) => `${f.inicio}|${f.destaque}`).join('\n'),
     temaPadrao: cfg.temaPadrao || 'laranja',
@@ -168,6 +169,13 @@ function deRascunho(rascunho) {
     link: (r.servidor.link || '').trim() || '#',
     jogadores: Math.max(0, Math.round(num(r.servidor.jogadores, CONFIG_BASE.servidor.jogadores)))
   };
+  cfg.checkout = {
+    chavePix: (r.checkout.chavePix || '').trim(),
+    tipoChavePix: ['cpf', 'cnpj', 'telefone', 'email', 'aleatoria'].includes(r.checkout.tipoChavePix)
+      ? r.checkout.tipoChavePix
+      : 'aleatoria',
+    instrucoesPix: (r.checkout.instrucoesPix || '').trim() || CONFIG_BASE.checkout.instrucoesPix
+  };
   cfg.pagamentos = String(r._pagTexto || '').split('\n').map((s) => s.trim()).filter(Boolean);
   cfg.frasesHero = String(r._frasesTexto || '').split('\n').map((s) => s.trim()).filter(Boolean)
     .map((linha) => {
@@ -238,6 +246,10 @@ export default function App() {
   const [resumo, setResumo] = useState(null);
   const [pedidosNota, setPedidosNota] = useState('');
   const [trocaEm, setTrocaEm] = useState(null);
+
+  /* seção segurança: auditoria das ações */
+  const [auditoria, setAuditoria] = useState(null);
+  const [auditoriaNota, setAuditoriaNota] = useState('');
 
   function toastMsg(msg, ok = true) {
     setToast({ msg, ok });
@@ -314,6 +326,34 @@ export default function App() {
   useEffect(() => {
     if (logado) carregarPedidos();
   }, [logado, filtroPedidos]);
+
+  /* auditoria: carrega quando a aba Segurança abre (modo servidor) */
+  async function carregarAuditoria() {
+    if (modo !== 'servidor') {
+      setAuditoria(null);
+      setAuditoriaNota('O registro de ações fica no servidor — entre pelo modo servidor para vê-lo aqui.');
+      return;
+    }
+    try {
+      const r = await fetch(API_RAIZ + '/api/auditoria', { headers: cabecalhoAuth() });
+      if (r.status === 401) {
+        setAuditoria(null);
+        setAuditoriaNota('Sessão expirou — entre de novo para ver o registro.');
+        return;
+      }
+      if (!r.ok) throw new Error('http ' + r.status);
+      const dados = await r.json();
+      setAuditoria(dados.registros || []);
+      setAuditoriaNota('');
+    } catch (e) {
+      setAuditoria(null);
+      setAuditoriaNota('Sem servidor para listar o registro agora.');
+    }
+  }
+
+  useEffect(() => {
+    if (logado && aba === 'seguranca') carregarAuditoria();
+  }, [logado, aba, modo]);
 
   async function mudarStatusPedido(codigo, status) {
     setTrocaEm(codigo);
@@ -623,6 +663,29 @@ export default function App() {
                 <label>Formas de pagamento <small>uma por linha</small></label>
                 <textarea rows={3} className="campo" value={cfg._pagTexto} onChange={(e) => setRascunho((r) => ({ ...r, _pagTexto: e.target.value }))} />
               </div>
+              <p className="campo-titulo-sec">Checkout — Pix</p>
+              <div className="campo-com-rotulo">
+                <label>Chave Pix <small>mostrada ao cliente no checkout</small></label>
+                <input className="campo campo-mono" placeholder="ex.: chavepix@banco" value={cfg.checkout.chavePix} onChange={(e) => setRascunho((r) => ({ ...r, checkout: { ...r.checkout, chavePix: e.target.value } }))} />
+              </div>
+              <div className="campo-com-rotulo">
+                <label>Tipo da chave</label>
+                <select className="campo campo-curto" value={cfg.checkout.tipoChavePix} onChange={(e) => setRascunho((r) => ({ ...r, checkout: { ...r.checkout, tipoChavePix: e.target.value } }))}>
+                  <option value="cpf">CPF</option>
+                  <option value="cnpj">CNPJ</option>
+                  <option value="telefone">Telefone</option>
+                  <option value="email">E-mail</option>
+                  <option value="aleatoria">Chave aleatória</option>
+                </select>
+              </div>
+              <div className="campo-com-rotulo">
+                <label>Instruções para o cliente <small>aparecem abaixo da chave</small></label>
+                <textarea rows={2} className="campo" value={cfg.checkout.instrucoesPix} onChange={(e) => setRascunho((r) => ({ ...r, checkout: { ...r.checkout, instrucoesPix: e.target.value } }))} />
+              </div>
+              <p className="secao-dica">
+                Sem <code>MP_ACCESS_TOKEN</code> no servidor, o checkout usa este Pix manual: o cliente paga,
+                a staff muda o pedido para <strong>pago</strong> e a entrega cai na fila do servidor automaticamente.
+              </p>
             </div>
           </section>
 
@@ -815,7 +878,9 @@ export default function App() {
                   <div className="pedido-pe">
                     <span>{p.cupom ? `cupom ${p.cupom} · −${p.descontoPct}%` : 'sem cupom'}</span>
                     {p.playerId ? <span>ID {p.playerId}</span> : null}
-                    {p.discordId ? <span>Discord {p.discordId}</span> : null}
+                    {p.discordTag ? <span>Discord {p.discordTag}</span> : (p.discordId ? <span>Discord {p.discordId}</span> : null)}
+                    {p.pagoEm ? <span>pago {String(p.pagoEm).slice(0, 16).replace('T', ' ')}</span> : null}
+                    {p.mpId ? <span className="pedido-mp">MP {p.mpId}</span> : null}
                     <strong className="pedido-total">{dinheiro(p.total)}</strong>
                   </div>
                 </div>
@@ -834,6 +899,22 @@ export default function App() {
                 <div className="campo-com-rotulo"><label>Repetir nova senha</label><input type="password" className="campo" value={segNova2} onChange={(e) => setSegNova2(e.target.value)} /></div>
               </div>
               <button type="button" className="btn btn-laranja btn-curta" onClick={trocarSenha}><Icone nome="key-round" /> Trocar senha</button>
+            </div>
+
+            <h3 className="secao-subtitulo"><Icone nome="scroll-text" /> Registro de ações (auditoria)</h3>
+            <p className="secao-dica">Últimas 200 ações: logins, mudanças de config, mudanças de status, pagamentos confirmados e entregas marcadas pelo servidor do jogo.</p>
+            <div>
+              {auditoriaNota ? <p className="pedidos-vazio">{auditoriaNota}</p> : null}
+              {!auditoriaNota && auditoria && auditoria.length === 0 ? <p className="pedidos-vazio">Nada registrado ainda.</p> : null}
+              <div className="auditoria-lista">
+                {(auditoria || []).map((a) => (
+                  <div className="auditoria-linha" key={a.id}>
+                    <span className="auditoria-quando">{String(a.criadoEm || '').slice(0, 19).replace('T', ' ')}</span>
+                    <span className="auditoria-acao">{a.acao}</span>
+                    <span className="auditoria-detalhe">{a.detalhe || '—'}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 

@@ -29,6 +29,15 @@ const CONFIG_BASE = {
 
   pagamentos: ['Pix', 'Cartão de Crédito', 'Mercado Pago'],
 
+  /* checkout (Fase 2): dados do Pix que o cliente vê na hora de pagar.
+     Sem MP_ACCESS_TOKEN no servidor, o checkout usa o Pix manual: o cliente
+     paga nessa chave e a staff confirma o pedido no painel. */
+  checkout: {
+    chavePix: '',
+    tipoChavePix: 'aleatoria', // cpf | cnpj | telefone | email | aleatoria
+    instrucoesPix: 'Pague com o Pix acima e envie o comprovante no Discord da loja. A staff confirma em minutos.'
+  },
+
   frasesHero: [
     { inicio: 'Domine',   destaque: 'o PvP da cidade' },
     { inicio: 'Monte',    destaque: 'sua lenda no servidor' },

@@ -14,12 +14,15 @@ const path = require('node:path');
 
 const pastaTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'ghrp-test-'));
 process.env.GHRP_DATA = pastaTemp;
+process.env.GHRP_SERVER_KEY = 'chave-servidor-teste'; // liga a rota da Fase 3 nos testes
 
 const { criarServidor } = require('../src/server.js');
+const api = require('../src/api');
 
 let servidor = null;
 let base = '';
 let token = '';
+let codigoCheckout = '';
 
 function pede(rota, { metodo = 'GET', corpo, token: tkn, headers: extras = {} } = {}) {
   const cab = { ...extras };
@@ -179,6 +182,133 @@ test('muda status do pedido e filtra listagem', async () => {
   assert.ok(filtrada.dados.pedidos.length >= 1);
   assert.ok(filtrada.dados.pedidos.every((p) => p.status === 'pago'));
   assert.ok(filtrada.dados.resumo && filtrada.dados.resumo.porStatus);
+});
+
+/* ----- checkout (Fase 2) ----- */
+test('config expõe recursos e checkout de fábrica', async () => {
+  const r = await pede('/api/config');
+  assert.equal(r.status, 200);
+  assert.deepEqual(Object.keys(r.dados.recursos).sort(), ['discordLogin', 'pixAutomatico']);
+  assert.equal(r.dados.recursos.pixAutomatico, false); // sem MP_ACCESS_TOKEN nos testes
+  assert.equal(r.dados.recursos.discordLogin, false);
+  assert.ok(r.dados.checkout && typeof r.dados.checkout.chavePix === 'string');
+});
+
+test('checkout exige playerId e cria pedido pendente', async () => {
+  api.zerarLimitesCheckout();
+
+  const semId = await pede('/api/checkout', { metodo: 'POST', corpo: { itens: [{ nome: 'VIP OURO – 30 DIAS', quantidade: 1 }] } });
+  assert.equal(semId.status, 400);
+
+  const sujo = await pede('/api/checkout', { metodo: 'POST', corpo: { itens: 'não é lista', playerId: '77' } });
+  assert.equal(sujo.status, 400);
+
+  const ok = await pede('/api/checkout', {
+    metodo: 'POST',
+    corpo: { itens: [{ nome: 'VIP OURO – 30 DIAS', quantidade: 1 }], playerId: '77' }
+  });
+  assert.equal(ok.status, 201);
+  assert.ok(ok.dados.pedido.id.startsWith('PED-'));
+  assert.equal(ok.dados.pedido.status, 'pendente');
+  assert.equal(ok.dados.pedido.total, 49.99);
+  assert.equal(ok.dados.manual.tipoChavePix, 'aleatoria');
+  codigoCheckout = ok.dados.pedido.id;
+
+  /* item inexistente também recusa */
+  const falso = await pede('/api/checkout', { metodo: 'POST', corpo: { itens: [{ nome: 'Espada X', quantidade: 1 }], playerId: '77' } });
+  assert.equal(falso.status, 400);
+});
+
+test('acompanhamento público do pedido mostra só id/status/total', async () => {
+  const r = await pede('/api/checkout/' + codigoCheckout);
+  assert.equal(r.status, 200);
+  assert.deepEqual(Object.keys(r.dados).sort(), ['id', 'status', 'total']);
+  assert.equal(r.dados.status, 'pendente');
+
+  const inexistente = await pede('/api/checkout/PED-NAO-EXISTE-99');
+  assert.equal(inexistente.status, 404);
+});
+
+test('OAuth Discord e webhook do MP avisam quando não estão configurados', async () => {
+  const oauth = await pede('/api/auth/discord');
+  assert.equal(oauth.status, 503);
+
+  const sessao = await pede('/api/auth/discord/sessao', { headers: { 'X-Discord-Token': 'qualquer' } });
+  assert.equal(sessao.status, 404);
+
+  const webhook = await pede('/api/webhooks/mercadopago', { metodo: 'POST', corpo: { type: 'payment', data: { id: '123' } } });
+  assert.equal(webhook.status, 503);
+});
+
+/* ----- entregas (Fase 3): PATCH → pago alimenta a fila do servidor ----- */
+test('PATCH para pago grava pago_em e cria entregas', async () => {
+  const antes = await pede('/api/checkout/' + codigoCheckout);
+  assert.equal(antes.dados.status, 'pendente');
+
+  const r = await pede('/api/orders/' + codigoCheckout, { metodo: 'PATCH', token, corpo: { status: 'pago' } });
+  assert.equal(r.status, 200);
+  assert.ok(r.dados.pedido.pagoEm);
+  assert.equal(r.dados.pedido.status, 'pago');
+
+  /* idempotente: marcar pago de novo não quebra nem duplica */
+  const deNovo = await pede('/api/orders/' + codigoCheckout, { metodo: 'PATCH', token, corpo: { status: 'pago' } });
+  assert.equal(deNovo.status, 200);
+  assert.equal(deNovo.dados.pedido.status, 'pago');
+
+  /* e o dono ainda pode avançar para entregue (vira auditória de status) */
+  const entregue = await pede('/api/orders/' + codigoCheckout, { metodo: 'PATCH', token, corpo: { status: 'entregue' } });
+  assert.equal(entregue.status, 200);
+  assert.equal(entregue.dados.pedido.status, 'entregue');
+});
+
+test('fila do FiveM: chave errada recusa, chave certa lista e marca', async () => {
+  const semChave = await pede('/api/deliveries/queue');
+  assert.equal(semChave.status, 401);
+
+  const errada = await pede('/api/deliveries/queue', { headers: { 'X-Server-Key': 'errada' } });
+  assert.equal(errada.status, 401);
+
+  const ok = await pede('/api/deliveries/queue', { headers: { 'X-Server-Key': 'chave-servidor-teste' } });
+  assert.equal(ok.status, 200);
+  assert.ok(ok.dados.entregas.length >= 1);
+  const entrega = ok.dados.entregas[0];
+  assert.ok(entrega.pedidoCodigo && entrega.nome && entrega.playerId);
+
+  const marca = await pede('/api/deliveries/' + entrega.id + '/marcar', {
+    metodo: 'POST',
+    headers: { 'X-Server-Key': 'chave-servidor-teste' },
+    corpo: { status: 'entregue' }
+  });
+  assert.equal(marca.status, 200);
+
+  const statusRuim = await pede('/api/deliveries/' + entrega.id + '/marcar', {
+    metodo: 'POST',
+    headers: { 'X-Server-Key': 'chave-servidor-teste' },
+    corpo: { status: 'virou-ouro' }
+  });
+  assert.equal(statusRuim.status, 400);
+
+  const inexistente = await pede('/api/deliveries/999999/marcar', {
+    metodo: 'POST',
+    headers: { 'X-Server-Key': 'chave-servidor-teste' },
+    corpo: { status: 'entregue' }
+  });
+  assert.equal(inexistente.status, 404);
+});
+
+/* ----- auditoria (Fase 4) ----- */
+test('auditoria registra o que aconteceu e é protegida', async () => {
+  const semToken = await pede('/api/auditoria');
+  assert.equal(semToken.status, 401);
+
+  const r = await pede('/api/auditoria', { token });
+  assert.equal(r.status, 200);
+  const acoes = r.dados.registros.map((a) => a.acao);
+  assert.ok(acoes.includes('pedido_pago'));
+  assert.ok(acoes.includes('pedido_status'));
+  assert.ok(acoes.includes('entrega_marcada'));
+  assert.ok(acoes.includes('admin_login'));
+  assert.ok(r.dados.registros.every((a) => a.criadoEm));
 });
 
 /* ----- senha ----- */

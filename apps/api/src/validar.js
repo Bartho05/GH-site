@@ -46,6 +46,14 @@ function discordId(v) {
   return /^\d{5,25}$/.test(t) ? t : null;
 }
 
+/* nome visível da conta Discord (ex.: "Player#1234" ou o novo @usuario) */
+function discordTag(v) {
+  const t = (typeof v === 'string' ? v.trim() : '');
+  return /^[A-Za-z0-9 .#_-]{2,40}$/.test(t) ? t : null;
+}
+
+const TIPOS_CHAVE_PIX = ['cpf', 'cnpj', 'telefone', 'email', 'aleatoria'];
+
 /* status permitido na troca manual pelo painel */
 function normalizaStatusPedido(status) {
   return STATUSES_PEDIDO.includes(status) ? status : null;
@@ -101,6 +109,16 @@ function normalizaConfig(entrada) {
       .filter(Boolean)
       .slice(0, 8);
     if (lista.length) cfg.pagamentos = lista;
+  }
+
+  /* checkout (Fase 2): dados do Pix manual mostrados ao cliente */
+  if (entrada.checkout && typeof entrada.checkout === 'object') {
+    const co = entrada.checkout;
+    if (co.chavePix !== undefined) cfg.checkout.chavePix = texto(co.chavePix, 80); // '' limpa a chave
+    if (co.tipoChavePix !== undefined && TIPOS_CHAVE_PIX.includes(co.tipoChavePix)) {
+      cfg.checkout.tipoChavePix = co.tipoChavePix;
+    }
+    if (co.instrucoesPix !== undefined) cfg.checkout.instrucoesPix = texto(co.instrucoesPix, 400);
   }
 
   if (Array.isArray(entrada.frasesHero)) {
@@ -238,9 +256,10 @@ function normalizaPedido(entrada, config) {
       total,
       cupom: cupomUsado,
       playerId: identificador(entrada.playerId),
-      discordId: discordId(entrada.discordId)
+      discordId: discordId(entrada.discordId),
+      discordTag: discordTag(entrada.discordTag)
     }
   };
 }
 
-module.exports = { normalizaConfig, normalizaPedido, normalizaStatusPedido };
+module.exports = { normalizaConfig, normalizaPedido, normalizaStatusPedido, TIPOS_CHAVE_PIX };

@@ -112,9 +112,28 @@ function lerCorpo(req) {
 
 function criarServidor() {
   return http.createServer(async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    /* Fase 4 — cabeças de segurança em todas as respostas */
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+    /* Fase 4 — CORS: aberto só em desenvolvimento. Com GHRP_ORIGIN
+       definido (ex.: https://loja.ghroleplay.com), requisições de
+       origem diferente são recusadas de cara. */
+    const origemPermitida = process.env.GHRP_ORIGIN;
+    if (origemPermitida) {
+      const origem = req.headers.origin;
+      if (origem && origem !== origemPermitida) {
+        res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ erro: 'origem não permitida' }));
+      }
+      res.setHeader('Access-Control-Allow-Origin', origemPermitida);
+      res.setHeader('Vary', 'Origin');
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Server-Key, X-Discord-Token');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
 
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
@@ -139,7 +158,11 @@ function criarServidor() {
           if (corpo === null) return enviar(res, 400, { erro: 'corpo JSON inválido ou grande demais' });
         }
         const enviarJson = (status, dados, tipo) => enviar(res, status, dados, tipo);
-        return api.despachar(req, res, { metodo, pathname, url, corpo, enviar: enviarJson });
+        const redirecionar = (location) => {
+          res.writeHead(302, { Location: location, 'Content-Length': 0, 'Cache-Control': 'no-store' });
+          res.end();
+        };
+        return api.despachar(req, res, { metodo, pathname, url, corpo, enviar: enviarJson, redirecionar });
       }
       if (req.method === 'GET' || req.method === 'HEAD') {
         return servirEstatico(req, res, pathname);

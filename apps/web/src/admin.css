@@ -249,3 +249,35 @@ select.pedido-status:disabled { opacity: .5; cursor: wait; }
 .pedido-pe { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; font-size: .72rem; color: #9a9a9a; }
 .pedido-total { margin-left: auto; font-size: .88rem; color: #fff; }
 .pedidos-vazio { color: #9a9a9a; font-size: .8rem; padding: .8rem 0; }
+.pedido-mp { color: #22c55e; font-family: ui-monospace, Consolas, monospace; font-size: .68rem; }
+
+/* ---------- Checkout (campos Pix na aba Geral) ---------- */
+.campo-titulo-sec {
+  font-size: .76rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: hsl(var(--primary)); border-top: 1px dashed rgba(255,255,255,.14);
+  padding-top: .9rem; margin-top: .4rem; grid-column: 1 / -1;
+}
+
+/* ---------- Auditoria (aba Segurança) ---------- */
+.secao-subtitulo {
+  display: flex; align-items: center; gap: .45rem;
+  font-size: .92rem; font-weight: 800; margin: 1.6rem 0 .3rem;
+}
+.secao-subtitulo svg { width: 15px; height: 15px; color: hsl(var(--primary)); }
+.auditoria-lista {
+  display: flex; flex-direction: column; gap: .35rem; max-width: 760px;
+}
+.auditoria-linha {
+  display: grid; grid-template-columns: 118px 150px 1fr; gap: .7rem; align-items: baseline;
+  background: rgb(var(--surface)); border: 1px solid rgba(255,255,255,.09);
+  border-radius: .7rem; padding: .5rem .7rem; font-size: .74rem;
+}
+.auditoria-quando { color: #8f8f8f; font-family: ui-monospace, Consolas, monospace; font-size: .68rem; }
+.auditoria-acao {
+  color: hsl(var(--primary)); font-weight: 700; font-size: .7rem;
+  font-family: ui-monospace, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.auditoria-detalhe { color: #cfcfcf; overflow-wrap: anywhere; }
+@media (max-width: 720px) {
+  .auditoria-linha { grid-template-columns: 1fr; gap: .2rem; }
+}
