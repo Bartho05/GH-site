@@ -69,7 +69,7 @@ const DICT = {
   reduzirAnimDica: { pt: 'Desliga a digitação do título e as entradas suaves.', en: 'Turns off the typed headline and soft entrances.', es: 'Apaga la escritura del título y las entradas suaves.', it: 'Disattiva la digitazione del titolo e le entrate morbide.' },
   corLoja: { pt: 'Cor da loja', en: 'Store color', es: 'Color de la tienda', it: 'Colore dello store' },
   corDica: { pt: 'A cor vale para todo o site e fica lembrada.', en: 'The color applies to the whole site and is remembered.', es: 'El color vale para todo el sitio y queda guardado.', it: 'Il colore vale per tutto il sito e viene salvato.' },
-  temaBloqueada: { pt: 'Disponível em 01/12', en: 'Available on Dec 1st', es: 'Disponible el 01/12', it: 'Disponibile il 01/12' },
+  temaDisponivelEm: { pt: 'Disponível em {d}', en: 'Available from {d}', es: 'Disponible desde {d}', it: 'Disponibile dal {d}' },
   idioma: { pt: 'Idioma', en: 'Language', es: 'Idioma', it: 'Lingua' },
   moeda: { pt: 'Moeda', en: 'Currency', es: 'Moneda', it: 'Valuta' },
   moedaDica: { pt: 'Valor aproximado, só para referência. A cobrança é sempre em reais (R$).', en: 'Approximate value, for reference only. You are always charged in reais (R$).', es: 'Valor aproximado, solo de referencia. El cobro siempre es en reales (R$).', it: 'Valore approssimativo, solo di riferimento. Il pagamento è sempre in real (R$).' },
@@ -81,6 +81,7 @@ const DICT = {
   cursorPontoG: { pt: 'Ponto grande', en: 'Big dot', es: 'Punto grande', it: 'Punto grande' },
   canais: { pt: 'Canais de atendimento', en: 'Support channels', es: 'Canales de atención', it: 'Canali di assistenza' },
   canaisDica: { pt: 'Resposta em minutos, todos os dias.', en: 'Reply in minutes, every day.', es: 'Respuesta en minutos, todos los días.', it: 'Risposta in pochi minuti, tutti i giorni.' },
+  suporteEmail: { pt: 'E-mail', en: 'E-mail', es: 'E-mail', it: 'E-mail' },
 
   /* ---- carrinho ---- */
   fecharCarrinho: { pt: 'Fechar carrinho', en: 'Close cart', es: 'Cerrar carrito', it: 'Chiudi carrello' },
@@ -93,9 +94,20 @@ const DICT = {
   irCheckout: { pt: 'Ir para o checkout', en: 'Go to checkout', es: 'Ir al pago', it: 'Vai alla cassa' },
   faltaCupom: { pt: 'Faltam <strong>{v}</strong> para {p}% OFF com o cupom <strong>{c}</strong>', en: '<strong>{v}</strong> left for {p}% OFF with coupon <strong>{c}</strong>', es: 'Faltan <strong>{v}</strong> para {p}% OFF con el cupón <strong>{c}</strong>', it: 'Mancano <strong>{v}</strong> per il {p}% OFF con il coupon <strong>{c}</strong>' },
   cupomLiberado: { pt: 'Cupom liberado! {p}% OFF pronto para usar', en: 'Coupon unlocked! {p}% OFF ready to use', es: '¡Cupón liberado! {p}% OFF listo para usar', it: 'Coupon sbloccato! {p}% OFF pronto da usare' },
+  aplicarCupom: { pt: 'Aplicar {c}', en: 'Apply {c}', es: 'Aplicar {c}', it: 'Applica {c}' },
 
   /* ---- hero / seções ---- */
   srHero: { pt: 'Loja para jogadores de elite', en: 'Store for elite players', es: 'Tienda para jugadores de élite', it: 'Store per giocatori d\u2019élite' },
+  tiktokLive: { pt: 'Ao vivo agora no TikTok', en: 'Live now on TikTok', es: 'En vivo ahora en TikTok', it: 'In diretta ora su TikTok' },
+  inicio: { pt: 'Início', en: 'Home', es: 'Inicio', it: 'Home' },
+
+  /* ---- ofertas sazonais (cards de evento, estilo ProLeague) ---- */
+  eventoAcabaEm: { pt: 'Acaba em', en: 'Ends on', es: 'Termina el', it: 'Termina il' },
+  eventoVerOfertas: { pt: 'Ver ofertas', en: 'See offers', es: 'Ver ofertas', it: 'Vedi offerte' },
+  eventoHalloween: { pt: 'Halloween', en: 'Halloween', es: 'Halloween', it: 'Halloween' },
+  eventoHalloweenTexto: { pt: 'Ofertas novas até 31 de outubro', en: 'New offers until October 31st', es: 'Ofertas nuevas hasta el 31 de octubre', it: 'Nuove offerte fino al 31 ottobre' },
+  eventoNatal: { pt: 'Natal', en: 'Christmas', es: 'Navidad', it: 'Natale' },
+  eventoNatalTexto: { pt: 'Ofertas de Natal até 25 de dezembro', en: 'Christmas offers until December 25th', es: 'Ofertas de Navidad hasta el 25 de diciembre', it: 'Offerte di Natale fino al 25 dicembre' },
   onlineAgora: { pt: 'jogadores online agora', en: 'players online now', es: 'jugadores online ahora', it: 'giocatori online ora' },
   conectar: { pt: 'Conectar', en: 'Connect', es: 'Conectar', it: 'Connetti' },
   explorar: { pt: 'Explorar produtos', en: 'Browse products', es: 'Explorar productos', it: 'Esplora i prodotti' },
@@ -115,6 +127,7 @@ const DICT = {
   rodapeComunidade: { pt: 'Comunidade', en: 'Community', es: 'Comunidad', it: 'Comunità' },
   catalogo: { pt: 'Catálogo', en: 'Catalog', es: 'Catálogo', it: 'Catalogo' },
   ranking: { pt: 'Ranking', en: 'Ranking', es: 'Ranking', it: 'Classifica' },
+  meusPedidos: { pt: 'Meus pedidos', en: 'My orders', es: 'Mis pedidos', it: 'I miei ordini' },
   termos: { pt: 'Termos e condições', en: 'Terms & conditions', es: 'Términos y condiciones', it: 'Termini e condizioni' },
   privacidade: { pt: 'Política de Privacidade', en: 'Privacy Policy', es: 'Política de Privacidad', it: 'Informativa sulla Privacy' },
   contato: { pt: 'Contato', en: 'Contact', es: 'Contacto', it: 'Contatti' },
@@ -133,6 +146,7 @@ const DICT = {
   brindeTitulo: { pt: 'Skin exclusiva grátis', en: 'Free exclusive skin', es: 'Skin exclusiva gratis', it: 'Skin esclusiva gratis' },
   brindeUse: { pt: 'Aponte a câmera do celular para o código:', en: 'Point your phone camera at the code:', es: 'Apunta la cámara del celular al código:', it: 'Inquadra il codice con la fotocamera:' },
   brindeNota: { pt: 'Este é um QR de demonstração — troque pelo link do seu brinde.', en: 'This is a demo QR — swap in your freebie link.', es: 'Este es un QR de demostración — cámbialo por tu enlace.', it: 'Questo QR è dimostrativo — sostituiscilo col tuo link.' },
+  brindeVideo: { pt: 'Ver vídeo tutorial', en: 'Watch the video tutorial', es: 'Ver el video tutorial', it: 'Guarda il video tutorial' },
 
   /* ---- consentimento LGPD ---- */
   consentA: { pt: 'Usamos cookies e armazenamento local para lembrar seu tema, seu carrinho e processar pedidos. Detalhes na', en: 'We use cookies and local storage to remember your theme, your cart and to process orders. Details in the', es: 'Usamos cookies y almacenamiento local para recordar tu tema, tu carrito y procesar pedidos. Detalles en la', it: 'Usiamo cookie e archiviazione locale per ricordare tema, carrello ed elaborare ordini. Dettagli nella' },
@@ -141,6 +155,10 @@ const DICT = {
 
   /* ---- checkout ---- */
   checkoutTitulo: { pt: 'Finalizar compra', en: 'Checkout', es: 'Finalizar compra', it: 'Vai alla cassa' },
+  etapas: { pt: 'Etapas do pedido', en: 'Order steps', es: 'Etapas del pedido', it: 'Fasi dell\u2019ordine' },
+  passoPagamento: { pt: 'Pagamento', en: 'Payment', es: 'Pago', it: 'Pagamento' },
+  passoConfirmacao: { pt: 'Confirmação', en: 'Confirmation', es: 'Confirmación', it: 'Conferma' },
+  passoEntrega: { pt: 'Entrega', en: 'Delivery', es: 'Entrega', it: 'Consegna' },
   idServidor: { pt: 'Seu ID no servidor', en: 'Your in-game ID', es: 'Tu ID en el servidor', it: 'Il tuo ID sul server' },
   idServidorDica: { pt: 'aparece na lista de jogadores (TAB)', en: 'shown in the player list (TAB)', es: 'aparece en la lista de jugadores (TAB)', it: 'visibile nella lista dei giocatori (TAB)' },
   contaDiscord: { pt: 'Conta Discord', en: 'Discord account', es: 'Cuenta de Discord', it: 'Account Discord' },

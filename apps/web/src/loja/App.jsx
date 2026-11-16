@@ -5,7 +5,7 @@
    servidor > localStorage > padrão de fábrica.
    ========================================================= */
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { CONFIG_BASE } from '../config-base.mjs';
 import {
   mesclar, lerConfigLocal, escreverConfigLocal, puxarConfigServidor,
@@ -24,17 +24,49 @@ import '../styles.css';
 
 const CONFIG_INICIAL = mesclar(CONFIG_BASE, lerConfigLocal() || {});
 
-/* nomes no estilo ProLeague: DEFAULT / GTA VI / NATAL (o natalino abre 01/12) */
+/* nomes no estilo ProLeague: DEFAULT / GTA VI / HALLOWEEN / NATAL */
 const TEMAS = [
   { id: 'laranja', nome: 'DEFAULT' },
   { id: 'rosa', nome: 'GTA VI' },
-  { id: 'verde', nome: 'NATAL', abreEm: '01/12' }
+  { id: 'halloween', nome: 'HALLOWEEN', meses: [9], abreEm: '01/10' },
+  { id: 'verde', nome: 'NATAL', meses: [11, 0], abreEm: '01/12' }
 ];
 
-/* NATAL fica liberado só em dezembro e janeiro */
-function natalAberto() {
-  const mes = new Date().getMonth(); // 11 = dezembro, 0 = janeiro
-  return mes === 11 || mes === 0;
+/* tema sazonal fica liberado só nos seus meses (getMonth: 9 = outubro, 11/0 = dez/jan) */
+function temaDisponivel(th) {
+  if (!th.meses) return true;
+  return th.meses.includes(new Date().getMonth());
+}
+
+/* ofertas sazonais no topo (estilo ProLeague): aparecem só na estação certa */
+function eventosDaEstacao() {
+  const hoje = new Date();
+  const mes = hoje.getMonth();
+  if (mes === 9) return [{ id: 'halloween', nome: 'eventoHalloween', texto: 'eventoHalloweenTexto', ate: '31/10' }];
+  if (mes === 11 && hoje.getDate() <= 25) return [{ id: 'natal', nome: 'eventoNatal', texto: 'eventoNatalTexto', ate: '25/12' }];
+  return [];
+}
+
+function FaixaEventos() {
+  const { t } = usarIdioma();
+  const eventos = eventosDaEstacao();
+  if (!eventos.length) return null;
+  return (
+    <div className="faixa-eventos" role="region" aria-label={t('eventoVerOfertas')}>
+      {eventos.map((ev) => (
+        <a className="evento-card" href="#store" key={ev.id}>
+          <div className="evento-info">
+            <h3 className="evento-nome">{t(ev.nome)}</h3>
+            <p className="evento-texto">{t(ev.texto)}</p>
+          </div>
+          <div className="evento-lado">
+            <span className="evento-prazo">{t('eventoAcabaEm')}<strong>{ev.ate}</strong></span>
+            <span className="evento-ver">{t('eventoVerOfertas')} <Icone nome="arrow-right" /></span>
+          </div>
+        </a>
+      ))}
+    </div>
+  );
 }
 
 /* fecha o painel quando o clique vem de fora do elemento */
@@ -403,6 +435,14 @@ export default function App() {
     setTimeout(() => setCopiado(false), 1600);
   };
 
+  /* "Aplicar cupom" do carrinho (estilo ProLeague): o checkout já
+     preenche o cupom sozinho — o botão leva direto pra lá */
+  const navegar = useNavigate();
+  const aplicarCupom = () => navegar('/checkout');
+
+  /* vídeo tutorial do brinde: usa o primeiro link do Youtube cadastrado */
+  const tutorialLink = (cfg.links || []).find((l) => /youtube/i.test(l.nome + ' ' + (l.url || '')) && l.url && l.url !== '#');
+
   const alternarBuscaMobile = () => {
     const vaiAbrir = !buscaMobileAberta;
     setBuscaMobileAberta(vaiAbrir);
@@ -434,6 +474,7 @@ export default function App() {
       </div>
 
       {/* ===== Cabeçalho ===== */}
+      <FaixaEventos />
       <header id="cabecalho" className="cabecalho">
         <div className="container">
           <nav className="cab-nav" aria-label="Navegação principal">
@@ -497,7 +538,7 @@ export default function App() {
                   <p className="painel-secao">{t('corLoja')}</p>
                   <div className="painel-grupo" role="radiogroup" aria-label={t('corLoja')}>
                     {TEMAS.map((th) => {
-                      const bloqueada = th.abreEm && !natalAberto();
+                      const bloqueada = !temaDisponivel(th);
                       return (
                         <button
                           type="button"
@@ -507,7 +548,7 @@ export default function App() {
                           data-tema-opcao={th.id}
                           aria-checked={tema === th.id}
                           disabled={bloqueada}
-                          title={bloqueada ? t('temaBloqueada') : undefined}
+                          title={bloqueada ? t('temaDisponivelEm', { d: th.abreEm }) : undefined}
                           onClick={() => escolherTema(th.id)}
                         >
                           <span className={`amostra amostra-${th.id}`} aria-hidden="true"></span>
@@ -602,6 +643,12 @@ export default function App() {
                       </a>
                     ))}
                   </div>
+                  {cfg.email ? (
+                    <a className="painel-opcao suporte-email" href={'mailto:' + cfg.email}>
+                      <Icone nome="mail" />
+                      <span className="painel-nome">{t('suporteEmail')} <small>{cfg.email}</small></span>
+                    </a>
+                  ) : null}
                   <p className="painel-dica">{t('canaisDica')}</p>
                 </div>
               </li>
@@ -704,6 +751,9 @@ export default function App() {
               <div className="cupom-progresso-trilha">
                 <div className="cupom-progresso-barra" style={{ width: barraCupom + '%' }}></div>
               </div>
+              <button type="button" className="cupom-aplicar" aria-label={t('aplicarCupom', { c: cfg.cupom.codigo })} onClick={aplicarCupom}>
+                <Icone nome="ticket-percent" /> {t('aplicarCupom', { c: cfg.cupom.codigo })}
+              </button>
             </div>
             <div className="carrinho-total">
               <span>{t('total')}</span>
@@ -739,6 +789,12 @@ export default function App() {
 
           <div className="container hero-grade">
             <div className="hero-texto">
+              {cfg.tiktokLive ? (
+                <a className="hero-tiktok" href={cfg.tiktokLive} target="_blank" rel="noopener">
+                  <span className="tiktok-ponto" aria-hidden="true"></span>
+                  {t('tiktokLive')} <Icone nome="arrow-up-right" />
+                </a>
+              ) : null}
               <h1 className="hero-titulo">
                 <span className="sr-only">{t('srHero')}</span>
                 <span className="datilo" aria-hidden="true">
@@ -837,6 +893,7 @@ export default function App() {
                       <span>{t('verCategoria')}</span>
                       <Icone nome="arrow-right" />
                     </a>
+                    {cat.descricao ? <p className="cat-cabeca-desc">{cat.descricao}</p> : null}
                   </Reveal>
                   <div className="grid-produtos" data-lista-cards>
                     {visiveis.map((p, idx) => (
@@ -897,6 +954,7 @@ export default function App() {
           </nav>
           <nav className="rodape-coluna" aria-label={t('rodapeAjuda')}>
             <p className="rodape-titulo">{t('rodapeAjuda')}</p>
+            <Link to="/conta">{t('meusPedidos')}</Link>
             <Link to="/terms">{t('termos')}</Link>
             <Link to="/privacidade">{t('privacidade')}</Link>
             <a href="#contato">{t('contato')}</a>
@@ -967,6 +1025,11 @@ export default function App() {
           <p className="painel-titulo">{t('brindeTitulo')}</p>
           <p className="painel-texto">{t('brindeUse')}</p>
           <QrFake />
+          {tutorialLink ? (
+            <a className="painel-video" href={tutorialLink.url} target="_blank" rel="noopener">
+              <Icone nome="play" /> {t('brindeVideo')}
+            </a>
+          ) : null}
           <p className="painel-nota">{t('brindeNota')}</p>
         </div>
       </div>

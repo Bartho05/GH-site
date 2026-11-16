@@ -179,6 +179,7 @@ select.campo { appearance: none; cursor: pointer; }
 .bola { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 14px rgba(0,0,0,.4) inset; }
 .cor-laranja { background: hsl(24 95% 55%); }
 .cor-rosa { background: hsl(316 85% 60%); }
+.cor-halloween { background: linear-gradient(135deg, hsl(275 70% 58%) 50%, hsl(28 95% 55%) 50%); }
 .cor-verde { background: hsl(140 75% 48%); }
 
 /* ---------- Cor de produto (input color) ---------- */

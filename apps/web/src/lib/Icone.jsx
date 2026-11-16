@@ -1,10 +1,30 @@
 import { icons } from 'lucide-react';
 import { paraCamel } from './util.js';
 
+/* Marcas que o Lucide não tem — desenhos próprios (fill, sem stroke).
+   'x' continua sendo o X de fechar; o logotipo do X é 'x-logo'. */
+const MARCAS = {
+  'x-logo': (props) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  ),
+  tiktok: (props) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M12.53 1.5h3.298a6.35 6.35 0 0 0 3.932 5.772v3.284a9.62 9.62 0 0 1-5.614-1.796v7.996a6.504 6.504 0 1 1-6.503-6.504c.178 0 .354.007.528.021v3.31a3.213 3.213 0 1 0 3.213 3.213V1.5Z" />
+    </svg>
+  ),
+  whatsapp: (props) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M12.04 2a9.9 9.9 0 0 0-8.39 15.24L2.5 21.5l4.38-1.12A9.9 9.9 0 1 0 12.04 2Zm5.8 14.03c-.25.7-1.45 1.34-2.02 1.38-.57.05-1.1.24-3.7-1.02s-4.12-4.2-4.25-4.4c-.13-.2-.83-1.16-.8-2.2.02-1.04.56-1.53.76-1.75.2-.22.44-.27.6-.27h.43c.14 0 .33-.05.5.39.18.44.6 1.54.66 1.65.05.11.09.24.01.39-.08.15-.15.24-.3.39l-.44.51c-.14.14-.3.3-.14.59.16.28.73 1.26 1.57 2.04 1.08 1 1.98 1.32 2.26 1.47.28.15.45.13.62-.07.16-.2.7-.81.9-1.09.19-.28.39-.23.65-.13.26.09 1.65.83 1.94.98.28.15.47.22.54.34.07.12.07.7-.18 1.4Z" />
+    </svg>
+  )
+};
+
 /* Ícone pelo nome em kebab-case vindo da config (ex.: 'gamepad-2').
    Nome desconhecido cai num ícone de alerta, nunca quebra a página. */
 export default function Icone({ nome, ...props }) {
-  const Componente = icons[paraCamel(nome)] || icons.Ban;
+  const Componente = MARCAS[nome] || icons[paraCamel(nome)] || icons.Ban;
   return <Componente {...props} />;
 }
 

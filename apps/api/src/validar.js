@@ -129,7 +129,7 @@ function normalizaConfig(entrada) {
     if (lista.length) cfg.frasesHero = lista;
   }
 
-  if (['laranja', 'rosa', 'verde'].includes(entrada.temaPadrao)) cfg.temaPadrao = entrada.temaPadrao;
+  if (['laranja', 'rosa', 'halloween', 'verde'].includes(entrada.temaPadrao)) cfg.temaPadrao = entrada.temaPadrao;
 
   if (Array.isArray(entrada.numeros) && entrada.numeros.length) {
     cfg.numeros = entrada.numeros.slice(0, 8).map((n) => ({
@@ -162,7 +162,7 @@ function normalizaConfig(entrada) {
         id = (base + '-' + n).slice(0, 32);
       }
       usados.add(id);
-      return { nome, id, destaque: !!(c && c.destaque) };
+      return { nome, id, destaque: !!(c && c.destaque), descricao: texto(c && c.descricao, 160) };
     }).filter(Boolean);
     if (!cfg.categorias.length) cfg.categorias = clone(CONFIG_BASE.categorias);
   }
@@ -207,6 +207,10 @@ function normalizaConfig(entrada) {
       icone: nomeIcone(l && l.icone, 'link')
     })).filter((l) => l.nome);
   }
+
+  /* contato e live: e-mail livre (sem @ obriga no formato? texto já limpa) e URL da live */
+  if (entrada.email !== undefined) cfg.email = texto(entrada.email, 80);
+  if (entrada.tiktokLive !== undefined) cfg.tiktokLive = urlSegura(entrada.tiktokLive, '');
 
   return { ok: true, config: cfg };
 }

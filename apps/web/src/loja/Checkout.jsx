@@ -23,6 +23,30 @@ const ROTULO_TIPO_PIX = {
   cpf: 'CPF', cnpj: 'CNPJ', telefone: 'Telefone', email: 'E-mail', aleatoria: 'Chave aleatória'
 };
 
+/* =========================================================
+   Etapas do pedido (1 Pagamento → 2 Confirmação → 3 Entrega)
+   ========================================================= */
+export function EtapasPedido({ ativa = 0 }) {
+  const { t } = usarIdioma();
+  const passos = [t('passoPagamento'), t('passoConfirmacao'), t('passoEntrega')];
+  return (
+    <ol className="checkout-steps" aria-label={t('etapas')}>
+      {passos.map((rotulo, i) => (
+        <li
+          key={rotulo}
+          className={i === ativa ? 'atual' : i < ativa ? 'feita' : ''}
+          aria-current={i === ativa ? 'step' : undefined}
+        >
+          <span className="passo-num" aria-hidden="true">
+            {i < ativa ? <CheckSvg width={12} height={12} /> : i + 1}
+          </span>
+          <span className="passo-rotulo">{rotulo}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function lerCarrinho() {
   try {
     const salvo = JSON.parse(localStorage.getItem('gh_carrinho'));
@@ -175,6 +199,7 @@ export default function Checkout() {
         <TopoLoja cfg={cfg} />
         <main className="container checkout-miolo">
           <section className="checkout-cartao checkout-confirmacao">
+            <EtapasPedido ativa={pedido.status === 'entregue' ? 2 : 1} />
             <span className="checkout-status-selo" data-status={pedido.status}>
               <Icone nome={pedido.status === 'cancelado' ? 'x' : 'receipt'} />
               {pedido.status === 'pendente' && t('aguardando')}
@@ -289,8 +314,14 @@ export default function Checkout() {
     <div className="checkout-pagina">
       <TopoLoja cfg={cfg} />
       <main className="container checkout-miolo">
+        <nav className="checkout-caminho" aria-label={t('etapas')}>
+          <Link to="/">{t('inicio')}</Link>
+          <Icone nome="chevron-right" aria-hidden="true" />
+          <span aria-current="page">{t('checkoutTitulo')}</span>
+        </nav>
         <section className="checkout-cartao">
           <h1 className="checkout-titulo"><Icone nome="lock" /> {t('checkoutTitulo')}</h1>
+          <EtapasPedido ativa={0} />
 
           {erro ? <p className="checkout-erro" role="alert"><Icone nome="circle-alert" /> {erro}</p> : null}
 

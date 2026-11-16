@@ -25,7 +25,13 @@ const CONFIG_BASE = {
     jogadores: 312          // número estático de demonstração
   },
 
-  temaPadrao: 'laranja',    // laranja | rosa | verde
+  temaPadrao: 'laranja',    // laranja | rosa | halloween | verde
+
+  /* e-mail de contato (botão no painel de suporte; '' esconde) */
+  email: '',
+
+  /* link da live no TikTok — preenchido, o hero mostra o selo "Ao vivo agora"; '' esconde */
+  tiktokLive: '',
 
   pagamentos: ['Pix', 'Cartão de Crédito', 'Mercado Pago'],
 
@@ -61,12 +67,12 @@ const CONFIG_BASE = {
   ],
 
   categorias: [
-    { id: 'oferta',   nome: 'OFERTA DA SEMANA', destaque: true },
-    { id: 'vips',     nome: 'VIPS' },
-    { id: 'veiculos', nome: 'VEÍCULOS' },
-    { id: 'armas',    nome: 'ARMAS' },
-    { id: 'combos',   nome: 'COMBOS' },
-    { id: 'dancas',   nome: 'DANÇAS' }
+    { id: 'oferta',   nome: 'OFERTA DA SEMANA', destaque: true, descricao: 'Os itens que mais saem juntos — com desconto.' },
+    { id: 'vips',     nome: 'VIPS',             descricao: 'Vantagens exclusivas dentro do servidor.' },
+    { id: 'veiculos', nome: 'VEÍCULOS',         descricao: 'Da garagem à blindagem completa.' },
+    { id: 'armas',    nome: 'ARMAS',            descricao: 'Arsenal pronto pro PvP.' },
+    { id: 'combos',   nome: 'COMBOS',           descricao: 'Pacotes com tudo junto e misturado.' },
+    { id: 'dancas',   nome: 'DANÇAS',           descricao: 'Estilo dentro e fora do servidor.' }
   ],
 
   produtos: [
@@ -96,9 +102,11 @@ const CONFIG_BASE = {
 
   links: [
     { nome: 'Instagram', icone: 'instagram',      url: '#' },
+    { nome: 'X',         icone: 'x-logo',         url: '#' },
     { nome: 'Discord',   icone: 'gamepad-2',      url: '#' },
-    { nome: 'Whatsapp',  icone: 'message-circle', url: '#' },
-    { nome: 'Youtube',   icone: 'youtube',        url: '#' }
+    { nome: 'Youtube',   icone: 'youtube',        url: '#' },
+    { nome: 'Tiktok',    icone: 'tiktok',         url: '#' },
+    { nome: 'Whatsapp',  icone: 'whatsapp',       url: '#' }
   ]
 };
 

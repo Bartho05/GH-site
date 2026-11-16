@@ -22,6 +22,10 @@
   --primary: 140 75% 48%;
   --secondary: 168 80% 40%;
 }
+:root[data-tema='halloween'] {
+  --primary: 275 70% 58%;     /* roxo bruxa */
+  --secondary: 28 95% 55%;    /* laranja abóbora */
+}
 
 /* ---------- Base ---------- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -225,6 +229,7 @@ ul { list-style: none; }
 .amostra { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
 .amostra-laranja { background: hsl(24 95% 55%); }
 .amostra-rosa { background: hsl(316 85% 60%); }
+.amostra-halloween { background: linear-gradient(135deg, hsl(275 70% 58%) 50%, hsl(28 95% 55%) 50%); }
 .amostra-verde { background: hsl(140 75% 48%); }
 
 /* Chave (toggle) */
@@ -982,6 +987,86 @@ html[data-anim='off'] .datilo-cursor { display: none; }
 .busca-mobile .busca-campo { max-width: none; width: 100%; height: 2.75rem; }
 
 /* =========================================================
+   Ofertas sazonais no topo (cards de evento, estilo ProLeague)
+   ========================================================= */
+.faixa-eventos {
+  display: grid; gap: .6rem;
+  padding: .6rem .9rem 0;
+  max-width: 1280px; margin: 0 auto;
+}
+.evento-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: .7rem 1rem; border-radius: .8rem;
+  background: linear-gradient(120deg, hsl(var(--primary) / .18), hsl(var(--secondary) / .12) 60%, rgba(255,255,255,.04));
+  border: 1px solid hsl(var(--primary) / .35);
+  text-decoration: none; color: inherit;
+  transition: border-color .2s, transform .2s;
+}
+.evento-card:hover { border-color: hsl(var(--primary) / .7); transform: translateY(-1px); }
+.evento-nome { font-size: .95rem; font-weight: 800; display: flex; align-items: center; gap: .4rem; }
+.evento-nome::before { content: '🎃'; font-size: .9rem; }
+.evento-texto { font-size: .76rem; color: #b9b9b9; }
+.evento-lado { display: flex; align-items: center; gap: .8rem; flex-shrink: 0; }
+.evento-prazo {
+  display: grid; line-height: 1.2;
+  font-size: .68rem; color: #9a9a9a; text-align: center;
+  border: 1px solid rgba(255,255,255,.14); border-radius: .55rem; padding: .25rem .6rem;
+}
+.evento-prazo strong { color: #fff; font-size: .8rem; }
+.evento-ver { font-size: .78rem; font-weight: 700; color: hsl(var(--primary)); display: inline-flex; align-items: center; gap: .25rem; }
+.evento-ver svg { width: 14px; height: 14px; }
+@media (max-width: 720px) {
+  .evento-card { flex-direction: column; align-items: flex-start; gap: .5rem; }
+}
+
+/* selo "Ao vivo agora no TikTok" do hero */
+.hero-tiktok {
+  display: inline-flex; align-items: center; gap: .45rem;
+  margin-bottom: .9rem; padding: .32rem .7rem;
+  border-radius: 999px; font-size: .74rem; font-weight: 700;
+  color: #fff; text-decoration: none;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.16);
+  transition: background .2s, border-color .2s;
+}
+.hero-tiktok:hover { background: rgba(255,255,255,.13); border-color: hsl(var(--primary) / .6); }
+.hero-tiktok svg { width: 13px; height: 13px; }
+.tiktok-ponto { width: 8px; height: 8px; border-radius: 50%; background: #f4357c; flex-shrink: 0; animation: tiktok-pulso 1.6s ease-out infinite; }
+@keyframes tiktok-pulso {
+  0% { box-shadow: 0 0 0 0 rgba(244, 53, 124, .55); }
+  70% { box-shadow: 0 0 0 7px rgba(244, 53, 124, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(244, 53, 124, 0); }
+}
+
+/* botão "Aplicar GHBEMVINDO" no carrinho */
+.cupom-aplicar {
+  width: 100%; margin-top: .5rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  padding: .5rem .8rem; border-radius: .6rem; border: 1px dashed hsl(var(--primary) / .5);
+  background: hsl(var(--primary) / .1); color: hsl(var(--primary));
+  font-weight: 800; font-size: .8rem; cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.cupom-aplicar:hover { background: hsl(var(--primary) / .22); border-style: solid; }
+.cupom-aplicar svg { width: 14px; height: 14px; }
+
+/* descrição da categoria (embaixo do cabeçalho da seção) */
+.cat-cabeca-desc {
+  flex-basis: 100%;
+  font-size: .78rem; color: #9a9a9a; margin-top: .15rem;
+}
+
+/* e-mail no painel de suporte + vídeo tutorial no brinde */
+.suporte-email small { display: block; font-size: .68rem; font-weight: 400; color: #9a9a9a; }
+.painel-video {
+  display: inline-flex; align-items: center; gap: .35rem;
+  margin-top: .55rem; font-size: .74rem; font-weight: 700;
+  color: hsl(var(--primary)); text-decoration: none;
+}
+.painel-video:hover { text-decoration: underline; }
+.painel-video svg { width: 14px; height: 14px; }
+
+/* =========================================================
    Preferências (painel de ajustes: idioma, moeda, cursor)
    ========================================================= */
 .painel-bandeira { font-size: .95rem; width: 1.1rem; text-align: center; flex-shrink: 0; }
@@ -1017,6 +1102,45 @@ html[data-cursor='pontoG'] *, html[data-cursor='pontoG'] {
 .checkout-nota-cobranca {
   display: flex; align-items: center; gap: .4rem;
   font-size: .7rem; color: #9a9a9a; margin-top: .5rem;
+}
+
+/* trilha "Início / Checkout" e etapas do pedido (estilo ProLeague) */
+.checkout-caminho {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .76rem; color: #9a9a9a; margin-bottom: .7rem;
+}
+.checkout-caminho a { color: #c9c9c9; text-decoration: none; }
+.checkout-caminho a:hover { color: hsl(var(--primary)); text-decoration: underline; }
+.checkout-caminho svg { width: 12px; height: 12px; }
+.checkout-caminho [aria-current] { color: #fff; font-weight: 700; }
+
+.checkout-steps {
+  display: flex; gap: .4rem; list-style: none;
+  margin: .3rem 0 1.2rem;
+}
+.checkout-steps li {
+  flex: 1; display: flex; align-items: center; gap: .45rem;
+  padding: .45rem .6rem; border-radius: .6rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  color: #8d8d8d; font-size: .74rem; font-weight: 600;
+}
+.checkout-steps .passo-num {
+  width: 1.35rem; height: 1.35rem; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: rgba(255,255,255,.1); font-size: .7rem; font-weight: 800;
+}
+.checkout-steps li.atual {
+  background: hsl(var(--primary) / .14);
+  border-color: hsl(var(--primary) / .55);
+  color: #fff;
+}
+.checkout-steps li.atual .passo-num { background: hsl(var(--primary)); color: #000; }
+.checkout-steps li.feita { color: #b5b5b5; }
+.checkout-steps li.feita .passo-num { background: rgba(255,255,255,.2); }
+@media (max-width: 640px) {
+  .checkout-steps .passo-rotulo { display: none; }
+  .checkout-steps li { justify-content: center; }
 }
 
 /* nota de idioma nos documentos legais */

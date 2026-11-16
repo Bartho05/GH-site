@@ -14,13 +14,14 @@ import '../admin.css';
 const CHAVE_SENHA = 'gh_admin_senha';
 const SENHA_PADRAO = 'admin123';
 
-/* Ícones do Lucide oferecidos nos selects */
+/* Ícones do Lucide oferecidos nos selects (+ marcas próprias do Icone.jsx) */
 const ICONES = [
   'award', 'book', 'briefcase', 'building-2', 'car', 'coffee', 'crown', 'crosshair',
   'flag', 'flame', 'gem', 'gift', 'gamepad-2', 'ghost', 'hammer', 'heart', 'home', 'key',
   'map', 'medal', 'mic', 'music', 'package', 'party-popper', 'radio', 'refresh-cw', 'rocket',
   'shield', 'shirt', 'skull', 'sparkles', 'star', 'swords', 'target', 'ticket', 'timer',
-  'trophy', 'users', 'zap'
+  'trophy', 'users', 'zap',
+  'instagram', 'youtube', 'x-logo', 'tiktok', 'whatsapp'
 ];
 
 const ABAS = [
@@ -111,7 +112,7 @@ function coletarCategorias(linhas) {
       id = (base + '-' + n).replace(/[^a-z0-9-]/g, '').toLowerCase(); // ids não podem repetir
     }
     usados.add(id);
-    return { nome, id, destaque: !!l.destaque };
+    return { nome, id, destaque: !!l.destaque, descricao: (l.descricao || '').trim() };
   }).filter((c) => c.nome);
 }
 
@@ -189,6 +190,8 @@ function deRascunho(rascunho) {
     })
     .filter((f) => f.inicio || f.destaque);
   cfg.pilares = (r.pilares || '').trim() || CONFIG_BASE.pilares;
+  cfg.email = (r.email || '').trim();
+  cfg.tiktokLive = (r.tiktokLive || '').trim();
   if (r.temaPadrao) cfg.temaPadrao = r.temaPadrao;
 
   cfg.numeros = coletarNumeros(r.numeros || []);
@@ -638,7 +641,7 @@ export default function App() {
   const addLinha = {
     categorias: () => setRascunho((r) => ({
       ...r,
-      categorias: [...r.categorias, { nome: 'NOVA CATEGORIA', id: 'nova-' + Date.now().toString(36), destaque: false }]
+      categorias: [...r.categorias, { nome: 'NOVA CATEGORIA', id: 'nova-' + Date.now().toString(36), destaque: false, descricao: '' }]
     })),
     produtos: () => setRascunho((r) => ({
       ...r,
@@ -746,6 +749,14 @@ export default function App() {
                 <input className="campo" placeholder="UTILIZE O CUPOM {cod} E GARANTA {pct}% OFF ..." value={cfg.anuncio} onChange={(e) => setRascunho((r) => ({ ...r, anuncio: e.target.value }))} />
               </div>
               <div className="campo-com-rotulo">
+                <label>E-mail de contato <small>aparece no painel de suporte; vazio esconde</small></label>
+                <input className="campo" type="email" placeholder="contato@seudominio.com" value={cfg.email || ''} onChange={(e) => setRascunho((r) => ({ ...r, email: e.target.value }))} />
+              </div>
+              <div className="campo-com-rotulo">
+                <label>TikTok ao vivo <small>link da live — preenchido, o hero mostra o selo "Ao vivo agora"; vazio esconde</small></label>
+                <input className="campo" placeholder="https://www.tiktok.com/@..." value={cfg.tiktokLive || ''} onChange={(e) => setRascunho((r) => ({ ...r, tiktokLive: e.target.value }))} />
+              </div>
+              <div className="campo-com-rotulo">
                 <label>Código do cupom</label>
                 <input className="campo" value={cfg.cupom.codigo} onChange={(e) => setRascunho((r) => ({ ...r, cupom: { ...r.cupom, codigo: e.target.value } }))} />
               </div>
@@ -817,11 +828,11 @@ export default function App() {
             <h2>Cor da loja</h2>
             <p className="secao-dica">Cor padrão para quem nunca escolheu. Cada visitante pode mudar a cor em "Ajustes" na própria loja, e a escolha dele é respeitada.</p>
             <div className="grade-cores">
-              {['laranja', 'rosa', 'verde'].map((t) => (
+              {['laranja', 'rosa', 'halloween', 'verde'].map((t) => (
                 <label className="cor-opcao" key={t}>
                   <input type="radio" name="conf-tema" value={t} checked={cfg.temaPadrao === t} onChange={(e) => setRascunho((r) => ({ ...r, temaPadrao: e.target.value }))} />
                   <span className={`bola cor-${t}`}></span>
-                  {t === 'rosa' ? 'Rosa neon' : t === 'laranja' ? 'Laranja' : 'Verde'}
+                  {t === 'rosa' ? 'Rosa neon' : t === 'halloween' ? 'Halloween' : t === 'laranja' ? 'Laranja' : 'Verde'}
                 </label>
               ))}
             </div>
@@ -862,12 +873,13 @@ export default function App() {
           {/* CATEGORIAS */}
           <section className={`secao${aba === 'categorias' ? ' ativa' : ''}`}>
             <h2>Categorias</h2>
-            <p className="secao-dica">A primeira com "destaque" ganha cor e contagem regressiva (zera à meia-noite). O <strong>id</strong> liga produto à categoria — não altere de produtos já cadastrados. Campos: nome · id · destaque.</p>
+            <p className="secao-dica">A primeira com "destaque" ganha cor e contagem regressiva (zera à meia-noite). O <strong>id</strong> liga produto à categoria — não altere de produtos já cadastrados. Campos: nome · id · descrição · destaque.</p>
             <div className="empilhador">
               {cfg.categorias.map((c, i) => (
                 <Linha key={i} onExcluir={() => excluirLinha('categorias', i)}>
                   <input className="campo b-largo" placeholder="Nome exibido" value={c.nome} onChange={(e) => editarLinha('categorias', i, 'nome', e.target.value)} />
                   <input className="campo b-medio campo-mono" placeholder="id" value={c.id} onChange={(e) => editarLinha('categorias', i, 'id', e.target.value)} />
+                  <input className="campo b-largo" placeholder="Descrição curta (opcional)" value={c.descricao || ''} onChange={(e) => editarLinha('categorias', i, 'descricao', e.target.value)} />
                   <label style={{ display: 'flex', alignItems: 'center', gap: '.35rem', fontSize: '.74rem', color: '#cfcfcf', cursor: 'pointer' }}>
                     <input type="checkbox" checked={!!c.destaque} onChange={(e) => editarLinha('categorias', i, 'destaque', e.target.checked)} />
                     <span>destaque</span>

@@ -91,10 +91,20 @@ Painel em **`/admin`** (rota da SPA — o endereço antigo `/admin.html` redirec
 No ícone de engrenagem do cabeçalho, o visitante escolhe (guardado no navegador):
 
 - **Reduzir animações** — desliga a digitação do título e as entradas suaves;
-- **Cor da loja** — DEFAULT / GTA VI / NATAL (o tema natalino fica com cadeado até 01/12);
+- **Cor da loja** — DEFAULT / GTA VI / HALLOWEEN / NATAL (os temas sazonais ficam com cadeado fora de época: Halloween só em outubro, Natal só em dez/jan);
 - **Idioma** — Português, English, Español, Italiano (interface; produtos seguem o que o dono cadastrou);
 - **Moeda** — Real / Dólar / Euro / Libra com valor aproximado — a cobrança é sempre em reais;
 - **Cursor** — padrão do sistema, mira (crosshair) ou ponto, com pré-visualização ao passar o mouse.
+
+## Extras de paridade com o ProLeague
+
+- **Ofertas sazonais** — cards de evento no topo ("Halloween até 31/10", "Natal até 25/12") aparecem sozinhos na estação certa e ligam pro catálogo;
+- **Cupom de 1 clique** — botão "Aplicar GHBEMVINDO" no carrinho leva ao checkout, onde o cupom já vem preenchido;
+- **Etapas do checkout** — 1 Pagamento → 2 Confirmação → 3 Entrega, com o passo atual marcado;
+- **TikTok ao vivo** — na aba *Geral* do painel, preencha o link da live e o hero mostra o selo "Ao vivo agora no TikTok";
+- **Vídeo tutorial do brinde** — a aba BRINDE usa o primeiro link do Youtube cadastrado em *Links & redes*;
+- **Descrição das categorias** — campo novo em *Categorias* do painel; aparece embaixo do título de cada seção;
+- **Redes completas** — Instagram, X, Discord, Youtube, TikTok e WhatsApp (ícones de marca próprios) + e-mail de contato no painel de suporte.
 
 ## Entrega automática (FiveM)
 

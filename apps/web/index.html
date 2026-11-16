@@ -19,7 +19,7 @@
     (function () {
       try {
         var salvo = localStorage.getItem('gh_tema');
-        if (['laranja', 'rosa', 'verde'].indexOf(salvo) >= 0 && salvo !== 'laranja') {
+        if (['laranja', 'rosa', 'halloween', 'verde'].indexOf(salvo) >= 0 && salvo !== 'laranja') {
           document.documentElement.dataset.tema = salvo;
         }
         var anim = localStorage.getItem('gh_anim');
