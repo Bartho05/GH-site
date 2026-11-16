@@ -11,8 +11,8 @@ import {
   mesclar, lerConfigLocal, escreverConfigLocal, puxarConfigServidor,
   BRL, slugProduto, fimDoDia, irParaProduto
 } from '../lib/util.js';
-import Icone, { Coroa, FiguraPodio, Estrelas, CheckSvg } from '../lib/Icone.jsx';
-import { Reveal, Contador, useDatilo } from './efeitos.jsx';
+import Icone, { Coroa, FiguraPodio, Louro, Estrelas, CheckSvg } from '../lib/Icone.jsx';
+import { Reveal, Contador, useDatilo, FundoGH } from './efeitos.jsx';
 import {
   usarIdioma, salvarIdioma, IDIOMAS,
   usarMoeda, salvarMoeda, MOEDAS, formatarPreco,
@@ -782,10 +782,14 @@ export default function App() {
             const r = hero.getBoundingClientRect();
             hero.style.setProperty('--foco-x', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
             hero.style.setProperty('--foco-y', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+            /* normalizados 0..1: o pódio 3D e os estilhaços usam pra inclinar */
+            hero.style.setProperty('--mx', ((e.clientX - r.left) / r.width).toFixed(3));
+            hero.style.setProperty('--my', ((e.clientY - r.top) / r.height).toFixed(3));
           }}
         >
           <div className="hero-fundo" aria-hidden="true"></div>
           <div className="hero-fundimento" aria-hidden="true"></div>
+          <FundoGH />
 
           <div className="container hero-grade">
             <div className="hero-texto">
@@ -830,11 +834,19 @@ export default function App() {
                   <Reveal tag="li" className="podio-lugar" key={p.nome + i} data-posicao={String(i + 1)} delay={0.15 + i * 0.08}>
                     <span className="podio-figura">
                       <span className="podio-coroa" aria-hidden="true"><Coroa className="podio-coroa-desenho" /></span>
-                      <span className="podio-avatar" aria-hidden="true">{p.nome.charAt(0)}</span>
+                      <span className="podio-avatar" aria-hidden="true"><span className="podio-avatar-miolo">{p.nome.charAt(0)}</span></span>
+                      <span className="sr-only">{i + 1}º lugar:</span>
                       <span className="podio-nome"><FiguraPodio /><span>{p.nome}</span></span>
                       <span className="podio-valor">{p.valor}</span>
                     </span>
-                    <span className="podio-degrau" aria-hidden="true"><span className="podio-numero">{i + 1}</span></span>
+                    <span className="podio-degrau" aria-hidden="true">
+                      <span className="podio-face podio-face-esq"></span>
+                      <span className="podio-face podio-face-dir"></span>
+                      <span className="podio-face podio-face-topo"></span>
+                      <span className="podio-louro podio-louro-esq"><Louro /></span>
+                      <span className="podio-numero">{i + 1}</span>
+                      <span className="podio-louro podio-louro-dir"><Louro /></span>
+                    </span>
                   </Reveal>
                 ))}
               </ol>
@@ -1004,7 +1016,7 @@ export default function App() {
               {copiado ? <CheckSvg width={16} height={16} /> : <Icone nome="copy" />}
             </button>
           </div>
-          <p className="painel-nota">{t('cupomValido')}</p>
+          <p className="painel-nota">{cfg.cupom.minimo > 0 ? t('cupomValidoMin', { v: preco(cfg.cupom.minimo) }) : t('cupomValido')}</p>
         </div>
       </div>
 

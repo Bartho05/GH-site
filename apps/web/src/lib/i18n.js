@@ -97,7 +97,7 @@ const DICT = {
   aplicarCupom: { pt: 'Aplicar {c}', en: 'Apply {c}', es: 'Aplicar {c}', it: 'Applica {c}' },
 
   /* ---- hero / seções ---- */
-  srHero: { pt: 'Loja para jogadores de elite', en: 'Store for elite players', es: 'Tienda para jugadores de élite', it: 'Store per giocatori d\u2019élite' },
+  srHero: { pt: 'A loja oficial do servidor de roleplay', en: 'The official roleplay server store', es: 'La tienda oficial del servidor de roleplay', it: 'Lo store ufficiale del server di roleplay' },
   tiktokLive: { pt: 'Ao vivo agora no TikTok', en: 'Live now on TikTok', es: 'En vivo ahora en TikTok', it: 'In diretta ora su TikTok' },
   inicio: { pt: 'Início', en: 'Home', es: 'Inicio', it: 'Home' },
 
@@ -138,10 +138,12 @@ const DICT = {
   /* ---- cupom + brinde (abas laterais) ---- */
   cupomWidget: { pt: 'CUPOM', en: 'COUPON', es: 'CUPÓN', it: 'COUPON' },
   cupomDisponivel: { pt: 'Cupom disponível', en: 'Coupon available', es: 'Cupón disponible', it: 'Coupon disponibile' },
-  cupomTitulo: { pt: '{p}% OFF no primeiro pedido', en: '{p}% OFF on your first order', es: '{p}% OFF en el primer pedido', it: '{p}% OFF sul primo ordine' },
-  cupomUse: { pt: 'Use o código abaixo no carrinho:', en: 'Use the code below in the cart:', es: 'Usa el código abajo en el carrito:', it: 'Usa il codice qui sotto nel carrello:' },
+  cupomTitulo: { pt: '{p}% OFF nas suas compras', en: '{p}% OFF on your purchases', es: '{p}% OFF en tus compras', it: '{p}% OFF sui tuoi acquisti' },
+  cupomUse: { pt: 'Copie o código e use no carrinho:', en: 'Copy the code and use it in the cart:', es: 'Copia el código y úsalo en el carrito:', it: 'Copia il codice e usalo nel carrello:' },
   copiarCupom: { pt: 'Copiar cupom', en: 'Copy coupon', es: 'Copiar cupón', it: 'Copia coupon' },
-  cupomValido: { pt: 'Válido para pedidos no carrinho.', en: 'Valid for orders in the cart.', es: 'Válido para pedidos en el carrito.', it: 'Valido per gli ordini nel carrello.' },
+  cupomValido: { pt: 'Válido em qualquer pedido do carrinho.', en: 'Valid on any cart order.', es: 'Válido para cualquier pedido del carrito.', it: 'Valido per qualsiasi ordine nel carrello.' },
+
+  cupomValidoMin: { pt: 'Válido em pedidos acima de {v}.', en: 'Valid on orders above {v}.', es: 'Válido en pedidos arriba de {v}.', it: 'Valido per ordini sopra {v}.' },
   brinde: { pt: 'BRINDE', en: 'FREEBIE', es: 'REGALO', it: 'OMAGGIO' },
   brindeTitulo: { pt: 'Skin exclusiva grátis', en: 'Free exclusive skin', es: 'Skin exclusiva gratis', it: 'Skin esclusiva gratis' },
   brindeUse: { pt: 'Aponte a câmera do celular para o código:', en: 'Point your phone camera at the code:', es: 'Apunta la cámara del celular al código:', it: 'Inquadra il codice con la fotocamera:' },

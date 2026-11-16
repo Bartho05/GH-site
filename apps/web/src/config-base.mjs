@@ -18,7 +18,7 @@ const CONFIG_BASE = {
     minimo: 150        // R$ mínimo do pedido para valer
   },
 
-  anuncio: 'UTILIZE O CUPOM {cod} E GARANTA {pct}% OFF NO PRIMEIRO PEDIDO',
+  anuncio: 'UTILIZE O CUPOM {cod} E GARANTA {pct}% OFF NAS SUAS COMPRAS',
 
   servidor: {
     link: '#',              // link "Conectar" (ex.: https://cfx.re/join/codigo)
@@ -45,13 +45,13 @@ const CONFIG_BASE = {
   },
 
   frasesHero: [
-    { inicio: 'Domine',   destaque: 'o PvP da cidade' },
-    { inicio: 'Monte',    destaque: 'sua lenda no servidor' },
-    { inicio: 'R$ 20 mil', destaque: 'em prêmios todo mês' },
-    { inicio: 'Leve',     destaque: 'sua gangue ao topo' }
+    { inicio: 'Viva',    destaque: 'histórias épicas na cidade' },
+    { inicio: 'Domine',  destaque: 'o submundo da cidade' },
+    { inicio: 'Monte',   destaque: 'sua fortuna e sua gangue' },
+    { inicio: 'Ganhe',   destaque: 'R$ 20 mil em prêmios todo mês' }
   ],
 
-  pilares: 'Competição • Loja • Recompensas • Comunidade',
+  pilares: 'Roleplay • Economia • Facções • Comunidade',
 
   numeros: [
     { icone: 'users',         prefixo: '+ de', valor: 60000,  decimais: 0, rotulo: 'Clientes atendidos' },
@@ -70,7 +70,7 @@ const CONFIG_BASE = {
     { id: 'oferta',   nome: 'OFERTA DA SEMANA', destaque: true, descricao: 'Os itens que mais saem juntos — com desconto.' },
     { id: 'vips',     nome: 'VIPS',             descricao: 'Vantagens exclusivas dentro do servidor.' },
     { id: 'veiculos', nome: 'VEÍCULOS',         descricao: 'Da garagem à blindagem completa.' },
-    { id: 'armas',    nome: 'ARMAS',            descricao: 'Arsenal pronto pro PvP.' },
+    { id: 'armas',    nome: 'ARMAS',            descricao: 'Arsenal pro seu personagem mandar na cidade.' },
     { id: 'combos',   nome: 'COMBOS',           descricao: 'Pacotes com tudo junto e misturado.' },
     { id: 'dancas',   nome: 'DANÇAS',           descricao: 'Estilo dentro e fora do servidor.' }
   ],

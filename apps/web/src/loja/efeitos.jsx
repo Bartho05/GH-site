@@ -67,7 +67,7 @@ export function Contador({ valor, decimais = 0 }) {
 }
 
 function telaInicial(frases) {
-  const primeira = (frases && frases[0]) || { inicio: 'Domine', destaque: 'o PvP da cidade' };
+  const primeira = (frases && frases[0]) || { inicio: 'Viva', destaque: 'histórias épicas na cidade' };
   return { inicio: primeira.inicio, destaque: primeira.destaque, mostrar1: true, mostrar2: false };
 }
 
@@ -129,4 +129,47 @@ export function useDatilo(frases, ligado) {
   }, [ligado, frases]);
 
   return tela;
+}
+
+/* Fundo do hero: vários "GH" da marca subindo devagar, cada um com tamanho,
+   velocidade e rotação próprios. Camada decorativa — some com "Reduzir
+   animações" (data-anim off) e com prefers-reduced-motion (via CSS). */
+const GHS_FUNDOS = [
+  { x: 3,  tam: 120, dur: 26, atraso: -2,   op: .06, dx: '-8vw',  rot: '7deg' },
+  { x: 12, tam: 84,  dur: 33, atraso: -14,  op: .05, dx: '6vw',   rot: '-6deg' },
+  { x: 23, tam: 210, dur: 40, atraso: -9,   op: .05, dx: '-10vw', rot: '5deg' },
+  { x: 34, tam: 64,  dur: 22, atraso: -5,   op: .09, dx: '7vw',   rot: '9deg' },
+  { x: 44, tam: 96,  dur: 29, atraso: -19,  op: .06, dx: '-6vw',  rot: '-7deg' },
+  { x: 55, tam: 150, dur: 36, atraso: -11,  op: .05, dx: '9vw',   rot: '6deg' },
+  { x: 66, tam: 72,  dur: 24, atraso: -3,   op: .08, dx: '-7vw',  rot: '-9deg' },
+  { x: 76, tam: 110, dur: 31, atraso: -16,  op: .06, dx: '6vw',   rot: '5deg' },
+  { x: 87, tam: 180, dur: 42, atraso: -25,  op: .05, dx: '-9vw',  rot: '-5deg' },
+  { x: 94, tam: 60,  dur: 20, atraso: -8,   op: .1,  dx: '5vw',   rot: '10deg' },
+  { x: 18, tam: 52,  dur: 18, atraso: -1,   op: .1,  dx: '-5vw',  rot: '12deg' },
+  { x: 40, tam: 44,  dur: 17, atraso: -13,  op: .12, dx: '6vw',   rot: '-12deg' },
+  { x: 61, tam: 56,  dur: 19, atraso: -7,   op: .1,  dx: '-6vw',  rot: '11deg' },
+  { x: 82, tam: 48,  dur: 21, atraso: -17,  op: .11, dx: '5vw',   rot: '-10deg' }
+];
+
+export function FundoGH() {
+  return (
+    <div className="hero-gh" aria-hidden="true">
+      {GHS_FUNDOS.map((g, i) => (
+        <i
+          key={i}
+          style={{
+            left: g.x + '%',
+            fontSize: g.tam,
+            opacity: g.op,
+            animationDuration: g.dur + 's',
+            animationDelay: g.atraso + 's',
+            '--dx': g.dx,
+            '--rot': g.rot
+          }}
+        >
+          GH
+        </i>
+      ))}
+    </div>
+  );
 }

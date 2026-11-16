@@ -52,6 +52,19 @@ export function FiguraPodio(props) {
   );
 }
 
+/* Galho de louro — acompanha o número no degrau do pódio */
+export function Louro(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+      <path d="M17.5 21.5C11.5 20.2 8.2 15.4 8.2 9.2c0-1.9.35-3.6 1-5.2" />
+      <path d="M11.6 20.4C9.9 17.8 6.2 17.4 3.9 19 5.5 21.6 9.3 22 11.6 20.4Z" />
+      <path d="M8.6 13.8C8.4 10.8 5.6 8.7 2.8 9.3 3 12.3 5.8 14.4 8.6 13.8Z" />
+      <path d="M9.4 8C11.5 6 11.7 3 10 1.2 7.9 3.2 7.7 6.1 9.4 8Z" />
+      <path d="M12.9 16.9C13.6 14.3 12.6 11.7 10.4 10.3 9.7 12.9 10.7 15.5 12.9 16.9Z" />
+    </svg>
+  );
+}
+
 /* As 5 estrelas dos depoimentos (classe 'vazia' apaga a que falta) */
 export function Estrelas({ nota }) {
   return Array.from({ length: 5 }, (_, i) => (
