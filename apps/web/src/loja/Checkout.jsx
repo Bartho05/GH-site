@@ -20,7 +20,7 @@ import '../styles.css';
 const CONFIG_INICIAL = mesclar(CONFIG_BASE, {});
 
 const ROTULO_TIPO_PIX = {
-  cpf: 'CPF', cnpj: 'CNPJ', telefone: 'Telefone', email: 'E-mail', aleatoria: 'Chave aleatória'
+  cpf: 'CPF', cnpj: 'CNPJ', email: 'E-mail'
 };
 
 /* =========================================================
@@ -266,7 +266,9 @@ export default function Checkout() {
                   <>
                     <p className="checkout-pix-rotulo"><Icone nome="qr-code" /> {t('pixManual')}</p>
                     <div className="checkout-pix-codigo">
-                      <span className="checkout-pix-tipo">{ROTULO_TIPO_PIX[manual.tipoChavePix] || 'Chave Pix'}</span>
+                      <span className="checkout-pix-tipo">{manual.tipoChavePix === 'telefone' ? t('pixTipoTelefone')
+                        : manual.tipoChavePix === 'aleatoria' ? t('pixTipoAleatoria')
+                        : ROTULO_TIPO_PIX[manual.tipoChavePix] || t('pixTipoChave')}</span>
                       <span className="checkout-pix-chave">{manual.chavePix}</span>
                       <button
                         type="button"
@@ -302,7 +304,7 @@ export default function Checkout() {
               ))}
             </div>
 
-            <Link to="/" className="btn btn-secundario"><Icone nome="arrow-left" /> Voltar à loja</Link>
+            <Link to="/" className="btn btn-secundario"><Icone nome="arrow-left" /> {t('voltarLoja')}</Link>
           </section>
         </main>
       </div>

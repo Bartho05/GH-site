@@ -62,9 +62,10 @@ ul { list-style: none; }
 }
 .skip-link:focus { top: 12px; }
 
-.container { width: 100%; max-width: 1360px; margin-inline: auto; padding-inline: 1rem; }
-@media (min-width: 640px) { .container { padding-inline: 1.5rem; } }
-@media (min-width: 1024px) { .container { padding-inline: 2rem; } }
+/* padding-inline ≥ 36px: as abas fixas CUPOM/BRINDE têm ~31px e não podem cobrir conteúdo */
+.container { width: 100%; max-width: 1360px; margin-inline: auto; padding-inline: 2.25rem; }
+@media (min-width: 640px) { .container { padding-inline: 2.5rem; } }
+@media (min-width: 1024px) { .container { padding-inline: 3rem; } }
 
 /* cores utilitárias */
 .text-primaria { color: hsl(var(--primary)); }
@@ -214,6 +215,8 @@ ul { list-style: none; }
   background: rgb(var(--surface)); border: 1px solid rgba(255,255,255,.1);
   border-radius: .9rem; box-shadow: 0 30px 60px rgba(0,0,0,.55);
 }
+/* o painel de ajustes tem 5 seções — rola em vez de estourar a viewport */
+.ajustes-painel { max-height: min(80vh, 640px); overflow-y: auto; overscroll-behavior: contain; }
 .painel-secao { font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9c9c9c; margin: .55rem .2rem .4rem; }
 .painel-dica { font-size: .74rem; color: #8f8f8f; margin: .4rem .2rem .1rem; }
 .painel-grupo { display: flex; flex-direction: column; gap: .25rem; }
@@ -483,7 +486,7 @@ ul { list-style: none; }
 }
 @media (min-width: 640px) { .categoria-secao { padding: 1.8rem 2rem 2rem; } }
 
-.cat-cabeca { display: flex; align-items: center; gap: .7rem; }
+.cat-cabeca { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
 .cat-cabeca-traco { width: 22px; height: 3px; border-radius: 99px; background: hsl(var(--primary)); }
 .cat-cabeca-titulo {
   font-size: clamp(1rem, 2.2vw, 1.3rem); font-weight: 800; letter-spacing: .01em;

@@ -200,6 +200,9 @@ const DICT = {
   copiarCodigoPix: { pt: 'Copiar código Pix', en: 'Copy Pix code', es: 'Copiar código Pix', it: 'Copia codice Pix' },
   copiarChavePix: { pt: 'Copiar chave Pix', en: 'Copy Pix key', es: 'Copiar clave Pix', it: 'Copia chiave Pix' },
   copiarValor: { pt: 'Copiar valor', en: 'Copy amount', es: 'Copiar valor', it: 'Copia importo' },
+  pixTipoTelefone: { pt: 'Telefone', en: 'Phone', es: 'Teléfono', it: 'Telefono' },
+  pixTipoAleatoria: { pt: 'Chave aleatória', en: 'Random key', es: 'Clave aleatoria', it: 'Chiave casuale' },
+  pixTipoChave: { pt: 'Chave Pix', en: 'Pix key', es: 'Clave Pix', it: 'Chiave Pix' },
   cobrancaBrl: { pt: 'A cobrança é sempre em reais (R$) — os valores aqui são os cobrados.', en: 'You are always charged in reais (R$) — these are the charged amounts.', es: 'El cobro siempre es en reales (R$) — estos son los valores cobrados.', it: 'Il pagamento è sempre in real (R$) — questi sono gli importi addebitati.' },
 
   /* ---- página do produto ---- */
