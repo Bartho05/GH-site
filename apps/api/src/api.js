@@ -4,7 +4,7 @@
 const crypto = require('crypto');
 const db = require('./db');
 const auth = require('./auth');
-const { normalizaConfig, normalizaPedido } = require('./validar');
+const { normalizaConfig, normalizaPedido, normalizaStatusPedido } = require('./validar');
 
 function tokenDe(req) {
   const h = req.headers.authorization || '';
@@ -22,6 +22,17 @@ function gerarIdPedido() {
 async function despachar(req, res, ctx) {
   const { metodo, pathname, url, corpo, enviar } = ctx;
   const rota = metodo + ' ' + pathname;
+
+  /* PATCH /api/orders/:codigo — dono muda o status pelo painel */
+  const matchPedido = pathname.match(/^\/api\/orders\/([A-Za-z0-9-]{4,64})$/);
+  if (matchPedido && metodo === 'PATCH') {
+    if (!logado(req)) return enviar(401, { erro: 'precisa estar logado (Bearer do /api/auth/login)' });
+    const status = normalizaStatusPedido(corpo && corpo.status);
+    if (!status) return enviar(400, { erro: 'status inválido (use pendente, pago, entregue ou cancelado)' });
+    const pedido = db.setStatusPedido(matchPedido[1], status);
+    if (!pedido) return enviar(404, { erro: 'pedido não encontrado' });
+    return enviar(200, { pedido });
+  }
 
   switch (rota) {
     case 'GET /api/health':
@@ -88,7 +99,9 @@ async function despachar(req, res, ctx) {
 
     case 'GET /api/orders': {
       if (!logado(req)) return enviar(401, { erro: 'precisa estar logado (Bearer do /api/auth/login)' });
-      return enviar(200, { pedidos: db.listarPedidos() });
+      const status = normalizaStatusPedido(url.searchParams.get('status') || '');
+      const pedidos = db.listarPedidos(status ? { status } : {});
+      return enviar(200, { pedidos, resumo: db.resumoPedidos() });
     }
 
     default:

@@ -9,7 +9,7 @@ Loja dark para servidores FiveM + painel do dono + backend Node puro.
 | Pasta     | O que é |
 |-----------|---------|
 | `apps/web` | Frontend (HTML/CSS/JS puro). `index.html` = loja · `admin.html` = painel do dono |
-| `apps/api` | Backend Node (só `node:http`, zero dependências). Serve o site e expõe a API JSON |
+| `apps/api` | Backend Node (só módulos nativos `node:http` + `node:sqlite`, zero dependência npm) |
 
 ## Rodar
 
@@ -36,8 +36,9 @@ Porta e pasta de dados são configuráveis: `PORT=3000 GHRP_DATA=C:\dados npm st
 | `POST /api/auth/logout` | encerra o token |
 | `POST /api/auth/trocar-senha` | **admin** troca a senha (guarda scrypt+salt) |
 | `GET  /api/products?categoria=id` · `/api/categories` | catálogo |
-| `POST /api/orders` | `{itens:[{nome,quantidade}], cupom?}` → pedido validado no servidor (preço vem do servidor, cupom só acima do mínimo) |
-| `GET  /api/orders` | **admin** lista os pedidos recebidos |
+| `POST /api/orders` | `{itens:[{nome,quantidade}], cupom?, playerId?, discordId?}` → pedido validado no servidor (preço vem do servidor, cupom só acima do mínimo) |
+| `GET  /api/orders` | **admin** lista os pedidos — filtro `?status=` + resumo (contagens e total arrecadado) |
+| `PATCH /api/orders/:id` | **admin** muda o status: `pendente`, `pago`, `entregue`, `cancelado` |
 
 ## Admin
 
@@ -57,4 +58,10 @@ Abrindo `index.html` direto (file://), a loja funciona igual: usa o `config-base
 
 ## Dados
 
-`apps/api/data/store.json` guarda config, pedidos e o hash de senha. É criado semeadando do `apps/web/config-base.js` (fonte única dos valores iniciais). Apague o arquivo para resetar tudo, ou use "Resetar" no painel.
+`apps/api/data/loja.db` — banco **SQLite** nativo do Node (zero dependência, arquivo único na VPS). Guarda config, senha do admin, pedidos e a fila de entregas para o servidor FiveM. Na primeira execução importa automaticamente o `store.json` antigo, se existir; sem ele, semeia a config de `apps/web/config-base.js`. Backup = copiar o arquivo. Para resetar, apague `loja.db` (e o `store.json`, se quiser zerar o legado).
+
+## Próximas fases
+
+1. **Checkout completo:** login com Discord (OAuth) + ID do jogador + pagamento via Mercado Pago/Pix (webhook confirma e o pedido vira `pago` sozinho). Precisa de: app no Discord e conta no Mercado Pago (chaves ficam em variáveis de ambiente, nunca no código).
+2. **Entrega automática:** resource Lua (QBCore/Qbox) consulta a fila de entregas no backend e entrega o item/VIP ao player, marcando como entregue.
+3. **LGPD + segurança:** banner de consentimento, política de privacidade, anonimização de dados, CORS travado para o domínio, auditoria das ações do admin.

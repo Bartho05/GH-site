@@ -445,6 +445,104 @@ function preencherCamposFixos(cfg) {
 }
 
 /* =========================================================
+   Pedidos (modo servidor) — lista, filtro, resumo e status
+   ========================================================= */
+const ROTULOS_STATUS = { pendente: 'Pendente', pago: 'Pago', entregue: 'Entregue', cancelado: 'Cancelado' };
+
+function dinheiro(v) {
+  return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+}
+
+function renderizarPedidos(dados) {
+  const resumo = dados.resumo || { porStatus: {}, arrecadado: 0 };
+  const chips = Object.keys(ROTULOS_STATUS).map((s) => {
+    const info = resumo.porStatus && resumo.porStatus[s] ? resumo.porStatus[s] : { n: 0, total: 0 };
+    return `<span class="chip-status chip-${s}">${ROTULOS_STATUS[s]}: <strong>${info.n}</strong></span>`;
+  }).join('');
+  const elResumo = $('#pedidos-resumo');
+  elResumo.innerHTML = chips + `<span class="chip-status chip-total">Arrecadado: <strong>${dinheiro(resumo.arrecadado)}</strong></span>`;
+  elResumo.hidden = false;
+
+  const lista = $('#lista-pedidos');
+  if (!dados.pedidos.length) {
+    lista.innerHTML = '<p class="pedidos-vazio">Nenhum pedido com esse filtro ainda.</p>';
+    return;
+  }
+  lista.innerHTML = dados.pedidos.map((p) => `
+    <div class="pedido-linha">
+      <div class="pedido-topo">
+        <span class="pedido-codigo">${escapeHtml(p.id)}</span>
+        <span class="pedido-quando">${escapeHtml(String(p.criadoEm || '').slice(0, 16).replace('T', ' '))}</span>
+        <select class="campo pedido-status" data-codigo="${escapeHtml(p.id)}" aria-label="Status do pedido ${escapeHtml(p.id)}">
+          ${Object.keys(ROTULOS_STATUS).map((s) => `<option value="${s}"${s === p.status ? ' selected' : ''}>${ROTULOS_STATUS[s]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="pedido-itens">
+        ${(p.itens || []).map((i) => `<span class="pedido-item">${escapeHtml(i.nome)} <em>× ${i.quantidade}</em></span>`).join('')}
+      </div>
+      <div class="pedido-pe">
+        <span>${p.cupom ? `cupom ${escapeHtml(p.cupom)} · −${p.descontoPct}%` : 'sem cupom'}</span>
+        ${p.playerId ? `<span>ID ${escapeHtml(p.playerId)}</span>` : ''}
+        ${p.discordId ? `<span>Discord ${escapeHtml(p.discordId)}</span>` : ''}
+        <strong class="pedido-total">${dinheiro(p.total)}</strong>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function carregarPedidos() {
+  const lista = $('#lista-pedidos');
+  if (modoNome() !== 'servidor') {
+    $('#pedidos-resumo').hidden = true;
+    lista.innerHTML = '<p class="pedidos-vazio">Os pedidos ficam no servidor — entre pelo modo servidor para vê-los aqui.</p>';
+    return;
+  }
+  const filtro = $('#pedidos-filtro').value;
+  try {
+    const r = await fetch(API_RAIZ + '/api/orders' + (filtro ? '?status=' + encodeURIComponent(filtro) : ''), { headers: cabecalhoAuth() });
+    if (r.status === 401) {
+      lista.innerHTML = '<p class="pedidos-vazio">Sessão expirou — entre de novo para ver os pedidos.</p>';
+      return;
+    }
+    if (!r.ok) throw new Error('http ' + r.status);
+    renderizarPedidos(await r.json());
+  } catch (e) {
+    lista.innerHTML = '<p class="pedidos-vazio">Sem servidor para listar pedidos agora.</p>';
+  }
+}
+
+function montarPedidos() {
+  $('#pedidos-filtro').addEventListener('change', carregarPedidos);
+  $('#btn-pedidos-atualizar').addEventListener('click', carregarPedidos);
+  $('#lista-pedidos').addEventListener('change', async (e) => {
+    const sel = e.target.closest('.pedido-status');
+    if (!sel) return;
+    const codigo = sel.dataset.codigo;
+    sel.disabled = true;
+    try {
+      const r = await fetch(API_RAIZ + '/api/orders/' + encodeURIComponent(codigo), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...cabecalhoAuth() },
+        body: JSON.stringify({ status: sel.value })
+      });
+      if (r.ok) {
+        toast('Pedido ' + codigo + ' → ' + (ROTULOS_STATUS[sel.value] || sel.value));
+        await carregarPedidos();
+      } else if (r.status === 401) {
+        toast('Sessão expirou — entre de novo.', false);
+        sel.disabled = false;
+      } else {
+        toast('Não deu para atualizar o status.', false);
+        sel.disabled = false;
+      }
+    } catch (err) {
+      toast('Sem servidor para atualizar o status.', false);
+      sel.disabled = false;
+    }
+  });
+}
+
+/* =========================================================
    Montagem completa
    ========================================================= */
 async function montarTudo() {
@@ -464,6 +562,7 @@ async function montarTudo() {
   desenharDepoimentos(cfg.depoimentos);
   desenharLinks(cfg.links);
   icons();
+  await carregarPedidos();
 }
 
 /* =========================================================
@@ -610,6 +709,8 @@ function montarAcoes() {
     limparCamposSenha();
     toast('Senha trocada (modo local).');
   });
+
+  montarPedidos();
 }
 
 /* =========================================================

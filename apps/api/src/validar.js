@@ -3,7 +3,7 @@
    Estratégia: clamp-recupera. Campo inválido volta ao padrão ou
    é descartado; nada quebra o site por causa de uma edição ruim.
    ========================================================= */
-const { CONFIG_BASE, clone } = require('./db');
+const { CONFIG_BASE, clone, STATUSES_PEDIDO } = require('./db');
 
 function texto(v, max, padrao = '') {
   const t = (typeof v === 'string' ? v : '')
@@ -33,6 +33,22 @@ function urlSegura(v, padrao) {
   const t = typeof v === 'string' ? v.trim() : '';
   if (t && /^(https?:\/\/|\/|#)/i.test(t) && t.length <= 500) return t;
   return padrao;
+}
+
+/* identificadores do jogador no checkout (Fase 2/3): ID in-game e conta Discord */
+function identificador(v, max = 24) {
+  const t = (typeof v === 'string' ? v.trim() : '');
+  return (/^[A-Za-z0-9_-]+$/.test(t) && t.length <= max) ? t : null;
+}
+
+function discordId(v) {
+  const t = (typeof v === 'string' ? v.trim() : '');
+  return /^\d{5,25}$/.test(t) ? t : null;
+}
+
+/* status permitido na troca manual pelo painel */
+function normalizaStatusPedido(status) {
+  return STATUSES_PEDIDO.includes(status) ? status : null;
 }
 
 function slug(textoAlvo) {
@@ -220,9 +236,11 @@ function normalizaPedido(entrada, config) {
       descontoPct,
       desconto,
       total,
-      cupom: cupomUsado
+      cupom: cupomUsado,
+      playerId: identificador(entrada.playerId),
+      discordId: discordId(entrada.discordId)
     }
   };
 }
 
-module.exports = { normalizaConfig, normalizaPedido };
+module.exports = { normalizaConfig, normalizaPedido, normalizaStatusPedido };

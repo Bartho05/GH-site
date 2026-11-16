@@ -62,6 +62,7 @@
         <button type="button" class="aba-lateral" data-secao-btn="produtos"><i data-lucide="package"></i> Produtos</button>
         <button type="button" class="aba-lateral" data-secao-btn="depoimentos"><i data-lucide="message-square"></i> Depoimentos</button>
         <button type="button" class="aba-lateral" data-secao-btn="links"><i data-lucide="link"></i> Links &amp; redes</button>
+        <button type="button" class="aba-lateral" data-secao-btn="pedidos"><i data-lucide="receipt"></i> Pedidos</button>
         <button type="button" class="aba-lateral" data-secao-btn="seguranca"><i data-lucide="lock"></i> Segurança</button>
       </nav>
 
@@ -182,6 +183,24 @@
           <p class="secao-dica">Aparecem no painel de suporte e no rodapé. Campos de cada linha: nome · url · ícone.</p>
           <div id="lista-links" class="empilhador"></div>
           <button type="button" class="btn btn-fantasma btn-add" data-add-linha="links"><i data-lucide="plus"></i> Adicionar link</button>
+        </section>
+
+        <!-- PEDIDOS -->
+        <section class="secao" data-secao="pedidos">
+          <h2>Pedidos</h2>
+          <p class="secao-dica">Compras recebidas pelo site. Fluxo normal: <strong>pendente</strong> (aguardando pagamento) → <strong>pago</strong> → <strong>entregue</strong>. Cancelado não entra nos números arrecadados.</p>
+          <div class="pedidos-resumo" id="pedidos-resumo" hidden></div>
+          <div class="pedidos-barra">
+            <select id="pedidos-filtro" class="campo campo-curto" aria-label="Filtrar por status">
+              <option value="">Todos os status</option>
+              <option value="pendente">Pendente</option>
+              <option value="pago">Pago</option>
+              <option value="entregue">Entregue</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+            <button type="button" class="btn btn-fantasma" id="btn-pedidos-atualizar"><i data-lucide="refresh-cw"></i> Atualizar</button>
+          </div>
+          <div id="lista-pedidos"></div>
         </section>
 
         <!-- SEGURANÇA -->

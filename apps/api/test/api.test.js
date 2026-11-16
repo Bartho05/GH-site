@@ -118,11 +118,13 @@ test('produtos por categoria', async () => {
 test('cria pedido e calcula cupom', async () => {
   const simples = await pede('/api/orders', {
     metodo: 'POST',
-    corpo: { itens: [{ nome: 'VIP OURO – 30 DIAS', quantidade: 2 }] }
+    corpo: { itens: [{ nome: 'VIP OURO – 30 DIAS', quantidade: 2 }], playerId: '64', discordId: '12345' }
   });
   assert.equal(simples.status, 201);
   assert.equal(simples.dados.pedido.total, 99.98);
   assert.equal(simples.dados.pedido.descontoPct, 0);
+  assert.equal(simples.dados.pedido.playerId, '64');
+  assert.equal(simples.dados.pedido.discordId, '12345');
   assert.ok(simples.dados.pedido.id.startsWith('PED-'));
 
   const comCupom = await pede('/api/orders', {
@@ -148,6 +150,32 @@ test('lista de pedidos é protegida', async () => {
   const comToken = await pede('/api/orders', { token });
   assert.equal(comToken.status, 200);
   assert.ok(comToken.dados.pedidos.length >= 2);
+  assert.ok(comToken.dados.resumo && comToken.dados.resumo.porStatus);
+});
+
+/* ----- status do pedido (dono muda pelo painel) ----- */
+test('muda status do pedido e filtra listagem', async () => {
+  const lista = await pede('/api/orders', { token });
+  const codigo = lista.dados.pedidos[0].id;
+  assert.ok(codigo && codigo.startsWith('PED-'));
+
+  const semToken = await pede('/api/orders/' + codigo, { metodo: 'PATCH', corpo: { status: 'pago' } });
+  assert.equal(semToken.status, 401);
+
+  const invalido = await pede('/api/orders/' + codigo, { metodo: 'PATCH', token, corpo: { status: 'virou-ouro' } });
+  assert.equal(invalido.status, 400);
+
+  const inexistente = await pede('/api/orders/PED-NAO-EXISTE-0000', { metodo: 'PATCH', token, corpo: { status: 'pago' } });
+  assert.equal(inexistente.status, 404);
+
+  const ok = await pede('/api/orders/' + codigo, { metodo: 'PATCH', token, corpo: { status: 'pago' } });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.dados.pedido.status, 'pago');
+
+  const filtrada = await pede('/api/orders?status=pago', { token });
+  assert.ok(filtrada.dados.pedidos.length >= 1);
+  assert.ok(filtrada.dados.pedidos.every((p) => p.status === 'pago'));
+  assert.ok(filtrada.dados.resumo && filtrada.dados.resumo.porStatus);
 });
 
 /* ----- senha ----- */

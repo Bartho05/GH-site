@@ -108,7 +108,7 @@ function criarServidor() {
       if (pathname.startsWith('/api/')) {
         const metodo = req.method.toUpperCase();
         let corpo = null;
-        if (metodo === 'POST' || metodo === 'PUT') {
+        if (metodo === 'POST' || metodo === 'PUT' || metodo === 'PATCH') {
           corpo = await lerCorpo(req);
           if (corpo === null) return enviar(res, 400, { erro: 'corpo JSON inválido ou grande demais' });
         }
