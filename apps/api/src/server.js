@@ -55,7 +55,26 @@ function servirEstatico(req, res, pathname) {
     return enviar(res, 404, 'arquivo não encontrado', 'text/plain; charset=utf-8');
   }
   fs.readFile(resolvido, (erro, dados) => {
-    if (erro) return enviar(res, 404, 'arquivo não encontrado', 'text/plain; charset=utf-8');
+    if (erro) {
+      /* link antigo /admin.html aponta pra rota /admin do React */
+      if (pathname === '/admin.html') {
+        res.writeHead(301, { Location: '/admin', 'Content-Length': 0 });
+        return res.end();
+      }
+      /* SPA: rota do React sem extensão (ex.: /admin) cai no index.html */
+      if (!path.extname(alvo)) {
+        return fs.readFile(path.join(RAIZ_WEB, 'index.html'), (erro2, indice) => {
+          if (erro2) return enviar(res, 404, 'arquivo não encontrado', 'text/plain; charset=utf-8');
+          res.writeHead(200, {
+            'Content-Type': MIME['.html'],
+            'Content-Length': indice.length,
+            'Cache-Control': 'no-store'
+          });
+          res.end(indice);
+        });
+      }
+      return enviar(res, 404, 'arquivo não encontrado', 'text/plain; charset=utf-8');
+    }
     const tipo = MIME[path.extname(resolvido).toLowerCase()] || 'application/octet-stream';
     if (req.method === 'HEAD') {
       res.writeHead(200, { 'Content-Type': tipo, 'Content-Length': dados.length });
@@ -141,7 +160,7 @@ if (require.main === module) {
   const PORTA = Number(process.env.PORT || process.env.GHRP_PORT || 8123);
   criarServidor().listen(PORTA, () => {
     console.log('[gh-roleplay] loja:    http://localhost:' + PORTA + '/');
-    console.log('[gh-roleplay] admin:   http://localhost:' + PORTA + '/admin.html');
+    console.log('[gh-roleplay] admin:   http://localhost:' + PORTA + '/admin');
     console.log('[gh-roleplay] api:     http://localhost:' + PORTA + '/api/health');
   });
 }

@@ -5,6 +5,7 @@
    servidor > localStorage > padrão de fábrica.
    ========================================================= */
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router';
 import { CONFIG_BASE } from '../config-base.mjs';
 import {
   mesclar, lerConfigLocal, escreverConfigLocal, puxarConfigServidor,
@@ -12,6 +13,8 @@ import {
 } from '../lib/util.js';
 import Icone, { Coroa, FiguraPodio, Estrelas, CheckSvg } from '../lib/Icone.jsx';
 import { Reveal, Contador, useDatilo } from './efeitos.jsx';
+
+import '../styles.css';
 
 const CONFIG_INICIAL = mesclar(CONFIG_BASE, lerConfigLocal() || {});
 
@@ -405,13 +408,13 @@ export default function App() {
         <div className="container">
           <nav className="cab-nav" aria-label="Navegação principal">
             <div className="cab-esquerda">
-              <a href="/" className="marca">
+              <Link to="/" className="marca">
                 <span className="marca-logo" aria-hidden="true">{cfg.logoIniciais}</span>
                 <span className="marca-nome">
                   <span className="marca-titulo">{cfg.loja}</span>
                   <Icone nome="shield-check" className="marca-verificado" aria-label="Loja verificada" />
                 </span>
-              </a>
+              </Link>
 
               <BuscaDesktop cfg={cfg} />
             </div>
@@ -789,10 +792,10 @@ export default function App() {
       <footer className="rodape">
         <div className="container rodape-grade">
           <div className="rodape-marca">
-            <a href="/" className="marca">
+            <Link to="/" className="marca">
               <span className="marca-logo" aria-hidden="true">{cfg.logoIniciais}</span>
               <span className="rodape-marca-nome">{cfg.loja}</span>
-            </a>
+            </Link>
             <p className="rodape-descricao">Aqui você apoia o servidor: os recursos vão para a infraestrutura, melhorias e para as novidades do jogo.</p>
           </div>
           <nav className="rodape-coluna" aria-label="Loja">
@@ -805,7 +808,7 @@ export default function App() {
             <p className="rodape-titulo">Ajuda</p>
             <a href="#termos">Termos e condições</a>
             <a href="#contato">Contato</a>
-            <a href="admin.html">Painel do dono</a>
+            <Link to="/admin">Painel do dono</Link>
           </nav>
           <div className="rodape-coluna">
             <p className="rodape-titulo">Comunidade</p>
@@ -820,7 +823,7 @@ export default function App() {
         </div>
         <div className="rodape-barra">
           <div className="container rodape-barra-conteudo">
-            <p>Loja do servidor — as configurações ficam no <a href="admin.html" className="rodape-barra-link">painel do dono</a>.</p>
+            <p>Loja do servidor — as configurações ficam no <Link to="/admin" className="rodape-barra-link">painel do dono</Link>.</p>
             <p>Copyright © 2026 {cfg.loja}</p>
           </div>
         </div>

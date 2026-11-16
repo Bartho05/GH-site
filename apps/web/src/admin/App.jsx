@@ -9,6 +9,8 @@ import { CONFIG_BASE } from '../config-base.mjs';
 import { mesclar, lerConfigLocal, escreverConfigLocal, puxarConfigServidor, API_RAIZ } from '../lib/util.js';
 import Icone, { CheckSvg } from '../lib/Icone.jsx';
 
+import '../admin.css';
+
 const CHAVE_SENHA = 'gh_admin_senha';
 const SENHA_PADRAO = 'admin123';
 
@@ -277,6 +279,11 @@ export default function App() {
   useEffect(() => {
     if (mioloRef.current) mioloRef.current.scrollTop = 0;
   }, [aba]);
+
+  /* título da aba: "Admin — <loja>" */
+  useEffect(() => {
+    document.title = 'Admin — ' + ((rascunho && rascunho.loja) || CONFIG_BASE.loja);
+  }, [rascunho && rascunho.loja]);
 
   /* ---------- pedidos ---------- */
   async function carregarPedidos() {
@@ -549,7 +556,7 @@ export default function App() {
           </div>
         </div>
         <div className="barra-acoes">
-          <a className="btn btn-fantasma" href="index.html" target="_blank" rel="noopener"><Icone nome="external-link" /> Ver loja</a>
+          <a className="btn btn-fantasma" href="/" target="_blank" rel="noopener"><Icone nome="external-link" /> Ver loja</a>
           <button type="button" className="btn btn-fantasma" onClick={exportar}><Icone nome="download" /> Exportar</button>
           <button type="button" className="btn btn-fantasma" onClick={() => inputArquivo.current && inputArquivo.current.click()}><Icone nome="upload" /> Importar</button>
           <input type="file" ref={inputArquivo} accept="application/json" hidden onChange={importar} />

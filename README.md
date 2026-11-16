@@ -17,7 +17,7 @@ Loja dark para servidores FiveM + painel do dono + backend Node puro.
 npm install       # uma vez (liga os workspaces)
 npm start         # builda o frontend (se preciso) e sobe tudo:
                   # loja:    http://localhost:8123
-                  # painel:  http://localhost:8123/admin.html
+                  # painel:  http://localhost:8123/admin  (rota da SPA)
                   # api:     http://localhost:8123/api/health
 npm run dev       # desenvolvimento: Vite com hot-reload (5173) + API (8123, proxy /api)
 npm test          # 30 testes (unitários + integração + banco)
@@ -43,7 +43,7 @@ Porta e pasta de dados são configuráveis: `PORT=3000 GHRP_DATA=C:\dados npm st
 
 ## Admin
 
-Senha inicial: **admin123** — troque na aba *Segurança* do painel. Com servidor no ar, o login/salvamento/reset/troca de senha falam com a API; sem servidor, o painel avisa e opera modo local (localStorage).
+Painel em **`/admin`** (rota da SPA — o endereço antigo `/admin.html` redireciona pra lá). Senha inicial: **admin123** — troque na aba *Segurança* do painel. Com servidor no ar, o login/salvamento/reset/troca de senha falam com a API; sem servidor, o painel avisa e opera modo local (localStorage).
 
 ## Modo offline
 

@@ -54,13 +54,17 @@ test('health responde', async () => {
   assert.equal(r.dados.nome, 'gh-roleplay-api');
 });
 
-test('site estático é servido', async () => {
+test('site estático é servido (SPA)', async () => {
   const r = await pede('/');
   assert.equal(r.status, 200);
   assert.ok(r.dados.includes('GH Roleplay'));
-  const admin = await pede('/admin.html'); // config-base agora vive dentro do bundle do Vite
+  const admin = await pede('/admin'); // rota do React — fallback devolve o index.html
   assert.equal(admin.status, 200);
-  const faltando = await pede('/nao-existe.txt');
+  assert.ok(admin.dados.includes('id="raiz"'));
+  const antigo = await fetch(base + '/admin.html', { redirect: 'manual' }); // link antigo vira redirect
+  assert.equal(antigo.status, 301);
+  assert.equal(antigo.headers.get('location'), '/admin');
+  const faltando = await pede('/nao-existe.txt'); // com extensão → 404 real
   assert.equal(faltando.status, 404);
     const travessia = await fetch(base + '/%2e%2e/package-lock.json');
     assert.equal(travessia.status, 404); // arquivo existe na raiz do monorepo, fora do site
