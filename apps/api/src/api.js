@@ -174,6 +174,19 @@ async function despachar(req, res, ctx) {
     return enviar(200, { id: pedido.id, status: pedido.status, total: pedido.total });
   }
 
+  /* GET /api/vendas?nome= — unidades vendidas de um produto (pedidos
+     pagos/entregues). Público, mas só expõe um número agregado. */
+  if (pathname === '/api/vendas' && metodo === 'GET') {
+    const nome = (url.searchParams.get('nome') || '').trim();
+    if (!nome) return enviar(400, { erro: 'informe o nome do produto (?nome=)' });
+    let vendas = 0;
+    for (const p of db.listarPedidos({ limite: 5000 })) {
+      if (p.status !== 'pago' && p.status !== 'entregue') continue;
+      for (const i of p.itens || []) if (i.nome === nome) vendas += Number(i.quantidade) || 0;
+    }
+    return enviar(200, { vendas });
+  }
+
   /* POST /api/deliveries/:id/marcar — o servidor FiveM marca o que entregou */
   const matchEntrega = pathname.match(/^\/api\/deliveries\/(\d+)\/marcar$/);
   if (matchEntrega && metodo === 'POST') {

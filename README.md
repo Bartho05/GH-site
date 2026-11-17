@@ -56,6 +56,7 @@ Porta e pasta de dados são configuráveis: `PORT=3000 GHRP_DATA=C:\dados npm st
 | `GET  /api/products?categoria=id` · `/api/categories` | catálogo |
 | `POST /api/checkout` | **público** cria o pedido do cliente: `{itens, playerId, cupom?}` + header `X-Discord-Token` opcional → devolve pedido + Pix (copia e cola) ou a chave manual. Rate limit por IP |
 | `GET  /api/checkout/:codigo` | **público** acompanha o pedido (só `id`, `status`, `total`) — usado pelo polling da página |
+| `GET  /api/vendas?nome=` | **público** unidades vendidas de um produto (pedidos pagos/entregues) — contador da página do produto |
 | `POST /api/orders` | fluxo antigo de criação de pedido (validado, com rate limit) |
 | `GET  /api/orders` | **admin** lista os pedidos — filtro `?status=` + resumo |
 | `PATCH /api/orders/:id` | **admin** muda o status. Ir para `pago` grava `pago_em` e **alimenta a fila de entregas** |

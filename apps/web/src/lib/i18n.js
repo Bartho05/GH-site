@@ -220,6 +220,22 @@ const DICT = {
   noCarrinho: { pt: 'no carrinho', en: 'in cart', es: 'en el carrito', it: 'nel carrello' },
   pixEntrega: { pt: 'Pagamento via Pix · entrega automática', en: 'Payment via Pix · automatic delivery', es: 'Pago vía Pix · entrega automática', it: 'Pagamento via Pix · consegna automatica' },
 
+  /* ---- página do produto (estilo ProLeague) ---- */
+  entregaAutomatica: { pt: 'Entrega automática', en: 'Automatic delivery', es: 'Entrega automática', it: 'Consegna automatica' },
+  vendaUma: { pt: '1 venda', en: '1 sale', es: '1 venta', it: '1 vendita' },
+  vendasN: { pt: '{n} vendas', en: '{n} sales', es: '{n} ventas', it: '{n} vendite' },
+  avistaNoPix: { pt: 'À vista no Pix', en: 'Pay in full via Pix', es: 'Pago único vía Pix', it: 'Pagamento unico via Pix' },
+  cupomDicaProduto: { pt: '{p}% OFF acima de {m}', en: '{p}% OFF over {m}', es: '{p}% OFF sobre {m}', it: '{p}% OFF oltre {m}' },
+  pagamentoSeguro: { pt: 'Pagamento seguro', en: 'Secure payment', es: 'Pago seguro', it: 'Pagamento sicuro' },
+  pixNaHora: { pt: 'Pix aprovado na hora', en: 'Pix approved instantly', es: 'Pix aprobado al instante', it: 'Pix approvato all\u2019istante' },
+  infoEntregaT: { pt: 'Entrega imediata', en: 'Instant delivery', es: 'Entrega inmediata', it: 'Consegna immediata' },
+  infoEntregaTxt: { pt: 'Receba o seu pacote imediatamente após o pagamento.', en: 'Receive your package immediately after payment.', es: 'Recibe tu paquete inmediatamente después del pago.', it: 'Ricevi il tuo pacchetto subito dopo il pagamento.' },
+  infoSegT: { pt: 'Segurança total', en: 'Total security', es: 'Seguridad total', it: 'Sicurezza totale' },
+  infoSegTxt: { pt: 'Seus dados ficam protegidos durante todo o processo.', en: 'Your data stays protected throughout the whole process.', es: 'Tus datos quedan protegidos durante todo el proceso.', it: 'I tuoi dati restano protetti durante tutto il processo.' },
+  infoPagoT: { pt: 'Formas de pagamento', en: 'Payment methods', es: 'Formas de pago', it: 'Metodi di pagamento' },
+  infoPagoTxt: { pt: 'Pix aprovado na hora via Mercado Pago — o item cai no servidor na sequência.', en: 'Pix approved instantly via Mercado Pago — the item hits the server right after.', es: 'Pix aprobado al instante vía Mercado Pago — el ítem llega al servidor enseguida.', it: 'Pix approvato all\u2019istante via Mercado Pago — l\u2019oggetto arriva sul server subito dopo.' },
+  relacionados: { pt: 'Você também vai gostar', en: 'You may also like', es: 'También te puede gustar', it: 'Potrebbero piacerti anche' },
+
   /* ---- conta ---- */
   minhaConta: { pt: 'Minha conta', en: 'My account', es: 'Mi cuenta', it: 'Il mio account' },
   contaIntro: { pt: 'Entre com o Discord para ver o histórico dos seus pedidos e acompanhar a entrega — sem precisar chamar o suporte.', en: 'Sign in with Discord to see your order history and track deliveries — no need to contact support.', es: 'Entra con Discord para ver el historial de tus pedidos y seguir la entrega — sin llamar al soporte.', it: 'Accedi con Discord per vedere lo storico dei tuoi ordini e seguire la consegna — senza chiamare l\u2019assistenza.' },

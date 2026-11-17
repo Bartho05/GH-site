@@ -1396,6 +1396,60 @@ html[data-cursor='pontoG'] *, html[data-cursor='pontoG'] {
 .produto-detalhe-carrinho { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; font-size: .76rem; color: #9a9a9a; margin-top: .4rem; }
 .produto-detalhe-carrinho svg { width: 13px; height: 13px; color: hsl(var(--primary)); }
 .produto-detalhe-carrinho a { color: hsl(var(--primary)); font-weight: 600; }
+/* stats do produto (estilo ProLeague: vendas · entrega automática) */
+.produto-stats { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: .76rem; color: #a8a8a8; }
+.produto-stats span { display: inline-flex; align-items: center; gap: .3rem; }
+.produto-stats span + span::before { content: '·'; margin-right: .5rem; color: #5c5c5c; }
+.produto-stats svg { width: 13px; height: 13px; color: hsl(var(--primary)); }
+
+/* preço: "à vista no Pix" + dica do cupom da loja */
+.produto-avista { display: flex; align-items: center; gap: .3rem; font-size: .74rem; color: #22c55e; }
+.produto-avista svg { width: 13px; height: 13px; }
+.produto-cupom-dica {
+  display: flex; align-items: center; gap: .35rem; flex-wrap: wrap;
+  font-size: .76rem; color: #c9c9c9;
+  background: hsl(var(--primary) / .07); border: 1px dashed hsl(var(--primary) / .35);
+  border-radius: .5rem; padding: .35rem .6rem;
+}
+.produto-cupom-dica svg { width: 13px; height: 13px; color: hsl(var(--primary)); flex: none; }
+.produto-cupom-dica code { font-size: .76em; font-weight: 700; color: hsl(var(--primary)); letter-spacing: .03em; }
+
+/* selos de confiança sob as ações */
+.produto-confianca { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .2rem; }
+.produto-confianca span {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .72rem; font-weight: 600; color: #b5b5b5;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 99px; padding: .25rem .6rem;
+}
+.produto-confianca svg { width: 12px; height: 12px; color: hsl(var(--primary)); }
+
+/* cartões de garantia (entrega · segurança · pagamento) */
+.produto-info-cartoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; max-width: 860px; margin: 1rem auto 0; }
+.produto-info-cartao {
+  border: 1px solid rgba(255,255,255,.09); border-radius: .9rem;
+  background: rgb(var(--surface)); padding: .9rem 1rem;
+  display: flex; flex-direction: column; gap: .25rem;
+}
+.produto-info-cartao svg { width: 18px; height: 18px; color: hsl(var(--primary)); margin-bottom: .15rem; }
+.produto-info-cartao h3 { font-size: .88rem; font-weight: 700; }
+.produto-info-cartao p { font-size: .76rem; color: #9c9c9c; line-height: 1.45; }
+
+/* produtos relacionados da mesma categoria */
+.produto-relacionados { max-width: 860px; margin: 1.6rem auto 0; }
+.produto-relacionados h2 { font-size: 1.02rem; font-weight: 800; letter-spacing: -.01em; margin-bottom: .7rem; }
+.produto-relacionados-grade { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; }
+.produto-rel-card {
+  display: flex; flex-direction: column; gap: .3rem; text-decoration: none;
+  border: 1px solid rgba(255,255,255,.09); border-radius: .8rem; overflow: hidden;
+  background: rgb(var(--surface)); transition: border-color .25s, transform .25s;
+}
+.produto-rel-card:hover { border-color: rgba(255,255,255,.28); transform: translateY(-3px); }
+.produto-rel-fig { aspect-ratio: 1 / 1; display: grid; place-items: center; background: linear-gradient(140deg, var(--c1, #2a2030), var(--c2, #141118)); }
+.produto-rel-fig svg { width: 34%; height: 34%; color: #fff; }
+.produto-rel-nome { font-size: .78rem; font-weight: 700; color: #fff; padding-inline: .55rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.produto-rel-preco { font-size: .78rem; font-weight: 800; color: hsl(var(--primary)); padding: 0 .55rem .5rem; }
+
 .produto-detalhe-voltar { margin-top: 1rem; text-align: center; }
 
 /* =========================================================
@@ -1497,6 +1551,8 @@ html[data-cursor='pontoG'] *, html[data-cursor='pontoG'] {
 
 @media (max-width: 720px) {
   .produto-detalhe { grid-template-columns: 1fr; }
+  .produto-relacionados-grade { grid-template-columns: repeat(2, 1fr); }
+  .produto-info-cartoes { grid-template-columns: 1fr; }
 }
 
 /* =========================================================

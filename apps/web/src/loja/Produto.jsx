@@ -1,13 +1,18 @@
 /* =========================================================
-   GH ROLEPLAY — Página do produto (Fase C)
-   /produto/:slug — foto real (quando o dono cadastrou),
-   descrição, preço e botões de carrinho. Mesma config
-   do resto da loja (servidor > localStorage > padrão).
+   GH ROLEPLAY — Página do produto (Fase C + rodada ProLeague)
+   /produto/:slug — igual à referência do ProLeague: stats do
+   produto (vendas reais do servidor + entrega automática),
+   preço "à vista no Pix" com a dica do cupom, selos de
+   confiança, descrição multilinha do dono, cartões de
+   garantia (entrega/segurança/pagamento) e produtos
+   relacionados da mesma categoria. A avaliação com estrelas
+   do ProLeague fica pra depois: precisa de um sistema novo
+   no backend (tabela + moderação).
    ========================================================= */
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { CONFIG_BASE } from '../config-base.mjs';
-import { mesclar, puxarConfigServidor, slugProduto } from '../lib/util.js';
+import { mesclar, puxarConfigServidor, slugProduto, API_RAIZ, BRL } from '../lib/util.js';
 import Icone from '../lib/Icone.jsx';
 import { TopoLoja } from './Checkout.jsx';
 import { usarIdioma, usarMoeda, formatarPreco } from '../lib/i18n.js';
@@ -43,6 +48,21 @@ export default function Produto() {
 
   const p = (cfg.produtos || []).find((x) => slugProduto(x.nome) === 'produto-' + slug);
 
+  /* unidades vendidas deste produto (pedidos pagos/entregues no
+     servidor — contador honesto, some quando não há nenhuma) */
+  const nomeProduto = p ? p.nome : null;
+  const [vendas, setVendas] = useState(null);
+  useEffect(() => {
+    if (!nomeProduto) return undefined;
+    setVendas(null);
+    let vivo = true;
+    fetch(API_RAIZ + '/api/vendas?nome=' + encodeURIComponent(nomeProduto))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (vivo && d) setVendas(Number(d.vendas) || 0); })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, [nomeProduto]);
+
   if (!p) {
     return (
       <div className="checkout-pagina">
@@ -62,6 +82,8 @@ export default function Produto() {
   const desconto = p.precoAntigo ? Math.round((1 - p.preco / p.precoAntigo) * 100) + '% OFF' : null;
   const categoria = (cfg.categorias || []).find((c) => c.id === p.categoria);
   const noCarrinho = lerCarrinho().filter((n) => n === p.nome).length;
+  const cupomAtivo = cfg.cupom && cfg.cupom.codigo && cfg.cupom.desconto > 0;
+  const relacionados = (cfg.produtos || []).filter((x) => x.categoria === p.categoria && x.nome !== p.nome).slice(0, 4);
 
   function adicionar() {
     try {
@@ -96,15 +118,29 @@ export default function Produto() {
             {p.tag ? <span className="marca-tag"><Icone nome="flame" />{p.tag}</span> : null}
             <h1 className="produto-detalhe-nome">{p.nome}</h1>
             {categoria ? <p className="produto-detalhe-cat">{categoria.nome}</p> : null}
-            {p.descricao ? <p className="produto-detalhe-desc">{p.descricao}</p> : null}
 
-            <p className="produto-meta"><Icone nome="zap" />{t('entregaInstantaneaLonga')}</p>
+            {/* stats (estilo ProLeague): vendas reais · entrega automática */}
+            <p className="produto-stats">
+              {vendas ? (
+                <span><Icone nome="trending-up" /> {vendas === 1 ? t('vendaUma') : t('vendasN', { n: vendas })}</span>
+              ) : null}
+              <span><Icone nome="zap" /> {t('entregaAutomatica')}</span>
+            </p>
+
+            {p.descricao ? <p className="produto-detalhe-desc">{p.descricao}</p> : null}
 
             <div className="produto-preco produto-detalhe-preco">
               {p.precoAntigo ? <span className="preco-antigo">{preco(p.precoAntigo)}</span> : null}
               <span className="preco-atual">{preco(p.preco)}</span>
               {desconto ? <span className="marca-desconto">{desconto}</span> : null}
             </div>
+            <p className="produto-avista"><Icone nome="badge-check" /> {t('avistaNoPix')}</p>
+            {cupomAtivo ? (
+              <p className="produto-cupom-dica">
+                <Icone nome="ticket-percent" /> <code>{cfg.cupom.codigo}</code>{' '}
+                <span>{t('cupomDicaProduto', { p: cfg.cupom.desconto, m: BRL(cfg.cupom.minimo) })}</span>
+              </p>
+            ) : null}
 
             <div className="produto-detalhe-acoes">
               <div className="produto-qtd" role="group" aria-label={t('quantidade')}>
@@ -120,6 +156,12 @@ export default function Produto() {
               </button>
             </div>
 
+            {/* selos de confiança (estilo ProLeague) */}
+            <div className="produto-confianca">
+              <span><Icone nome="shield-check" /> {t('pagamentoSeguro')}</span>
+              <span><Icone nome="zap" /> {t('pixNaHora')}</span>
+            </div>
+
             <p className="produto-detalhe-carrinho">
               {noCarrinho ? (
                 <>
@@ -132,6 +174,44 @@ export default function Produto() {
             </p>
           </div>
         </section>
+
+        {/* cartões de garantia (estilo ProLeague: entrega · segurança · pagamento) */}
+        <section className="produto-info-cartoes" aria-label={t('infoEntregaT')}>
+          <div className="produto-info-cartao">
+            <Icone nome="zap" />
+            <h3>{t('infoEntregaT')}</h3>
+            <p>{t('infoEntregaTxt')}</p>
+          </div>
+          <div className="produto-info-cartao">
+            <Icone nome="shield-check" />
+            <h3>{t('infoSegT')}</h3>
+            <p>{t('infoSegTxt')}</p>
+          </div>
+          <div className="produto-info-cartao">
+            <Icone nome="credit-card" />
+            <h3>{t('infoPagoT')}</h3>
+            <p>{t('infoPagoTxt')}</p>
+          </div>
+        </section>
+
+        {/* relacionados da mesma categoria */}
+        {relacionados.length ? (
+          <section className="produto-relacionados">
+            <h2>{t('relacionados')}</h2>
+            <div className="produto-relacionados-grade">
+              {relacionados.map((r) => {
+                const [rc1, rc2] = r.cores || ['#2a2030', '#141118'];
+                return (
+                  <Link key={r.nome} to={'/produto/' + slugProduto(r.nome).replace('produto-', '')} className="produto-rel-card">
+                    <span className="produto-rel-fig" style={{ '--c1': rc1, '--c2': rc2 }} aria-hidden="true"><Icone nome={r.icone} /></span>
+                    <span className="produto-rel-nome">{r.nome}</span>
+                    <span className="produto-rel-preco">{preco(r.preco)}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
         <p className="produto-detalhe-voltar"><Link to="/" className="btn btn-secundario"><Icone nome="arrow-left" /> {t('voltarLoja')}</Link></p>
       </main>

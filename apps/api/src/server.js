@@ -112,9 +112,12 @@ function lerCorpo(req) {
 
 function criarServidor() {
   return http.createServer(async (req, res) => {
-    /* Fase 4 — cabeças de segurança em todas as respostas */
+    /* Fase 4 — cabeças de segurança em todas as respostas.
+       SAMEORIGIN em vez de DENY: o próprio site pode se emendar
+       (testes de responsividade, pré-visualizações), sites de
+       terceiros continuam bloqueados. */
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
     /* Fase 4 — CORS: aberto só em desenvolvimento. Com GHRP_ORIGIN
