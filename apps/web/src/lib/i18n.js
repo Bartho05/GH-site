@@ -117,6 +117,11 @@ const DICT = {
   produtosPalavra: { pt: 'produtos', en: 'products', es: 'productos', it: 'prodotti' },
   verCategoria: { pt: 'Ver categoria', en: 'View category', es: 'Ver categoría', it: 'Vedi categoria' },
   depoimentosTitulo: { pt: 'Depoimentos de clientes', en: 'Customer reviews', es: 'Opiniones de clientes', it: 'Recensioni dei clienti' },
+  depoSub: { pt: 'Quem comprou na loja, aprova', en: 'Those who bought, approve', es: 'Los que compraron, aprueban', it: 'Chi ha acquistato, approva' },
+  depoContagem: { pt: '{n} depoimentos', en: '{n} reviews', es: '{n} opiniones', it: '{n} recensioni' },
+  depoVerificada: { pt: 'Compra verificada', en: 'Verified purchase', es: 'Compra verificada', it: 'Acquisto verificato' },
+  depoSetaEsq: { pt: 'Depoimentos anteriores', en: 'Previous reviews', es: 'Opiniones anteriores', it: 'Recensioni precedenti' },
+  depoSetaDir: { pt: 'Mais depoimentos', en: 'More reviews', es: 'Más opiniones', it: 'Più recensioni' },
   estrelasAria: { pt: '{n} de 5 estrelas', en: '{n} out of 5 stars', es: '{n} de 5 estrellas', it: '{n} su 5 stelle' },
   entregaInstantanea: { pt: 'Entrega instantânea', en: 'Instant delivery', es: 'Entrega instantánea', it: 'Consegna istantanea' },
 

@@ -226,16 +226,27 @@ function CardProduto({ p, comPromo, idx, onAdd }) {
   const [c1, c2] = p.cores || ['#2a2030', '#141118'];
   const { t } = usarIdioma();
   const moeda = usarMoeda();
+  const navegar = useNavigate();
   const desconto = p.precoAntigo ? Math.round((1 - p.preco / p.precoAntigo) * 100) + '% OFF' : null;
+  const rotaProduto = '/produto/' + slugProduto(p.nome).replace(/^produto-/, '');
 
-  const aoAdicionar = () => {
+  /* o CARD INTEIRO leva à página do produto (como no ProLeague);
+     o botão de adicionar para a propagação pra não navegar junto */
+  const aoAdicionar = (e) => {
+    if (e) e.stopPropagation();
     onAdd(p.nome);
     setOk(true);
     setTimeout(() => setOk(false), 800);
   };
 
   return (
-    <Reveal tag="article" className="produto-card" id={slugProduto(p.nome)} delay={Math.min(idx * 0.05, 0.3)}>
+    <Reveal
+      tag="article"
+      className="produto-card produto-card-clicavel"
+      id={slugProduto(p.nome)}
+      delay={Math.min(idx * 0.05, 0.3)}
+      onClick={() => navegar(rotaProduto)}
+    >
       <div className="produto-marcas" aria-hidden={p.imagem ? undefined : 'true'}>
         <div className={`produto-marca-fig${p.imagem ? ' com-imagem' : ''}`} style={{ '--c1': c1, '--c2': c2 }}>
           {p.imagem
@@ -250,7 +261,7 @@ function CardProduto({ p, comPromo, idx, onAdd }) {
       </div>
       <div className="produto-corpo">
         <h3 className="produto-nome">
-          <Link className="produto-nome-link" to={'/produto/' + slugProduto(p.nome).replace(/^produto-/, '')}>
+          <Link className="produto-nome-link" to={rotaProduto} onClick={(e) => e.stopPropagation()}>
             {p.nome}
           </Link>
         </h3>
@@ -440,6 +451,15 @@ export default function App() {
      preenche o cupom sozinho — o botão leva direto pra lá */
   const navegar = useNavigate();
   const aplicarCupom = () => navegar('/checkout');
+
+  /* depoimentos: trilho rolável com setas (uma carta por clique) */
+  const trilhoDeposRef = useRef(null);
+  const rolarDepos = (direcao) => {
+    const el = trilhoDeposRef.current;
+    if (!el) return;
+    const passo = el.firstElementChild ? el.firstElementChild.offsetWidth + 10 : 340;
+    el.scrollBy({ left: direcao * passo, behavior: 'smooth' });
+  };
 
   /* vídeo tutorial do brinde: usa o primeiro link do Youtube cadastrado */
   const tutorialLink = (cfg.links || []).find((l) => /youtube/i.test(l.nome + ' ' + (l.url || '')) && l.url && l.url !== '#');
@@ -923,18 +943,42 @@ export default function App() {
 
         {/* ===== Depoimentos ===== */}
         <section className="container depoimentos" id="depoimentos" aria-labelledby="depoimentos-titulo">
-          <h2 className="secao-titulo" id="depoimentos-titulo">{t('depoimentosTitulo')}</h2>
+          <div className="depo-cabeca">
+            <div className="depo-cabeca-titulos">
+              <h2 className="secao-titulo" id="depoimentos-titulo">{t('depoimentosTitulo')}</h2>
+              <p className="depo-sub">{t('depoSub')}</p>
+            </div>
+            {cfg.depoimentos.length > 0 && (
+              <div className="depo-media">
+                <span className="depo-media-nota">{(cfg.depoimentos.reduce((s, d) => s + (Number(d.nota) || 0), 0) / cfg.depoimentos.length).toFixed(1)}</span>
+                <span className="depo-media-lado">
+                  <Estrelas nota={Math.round(cfg.depoimentos.reduce((s, d) => s + (Number(d.nota) || 0), 0) / cfg.depoimentos.length)} />
+                  <span className="depo-media-conta">{t('depoContagem', { n: cfg.depoimentos.length })}</span>
+                </span>
+              </div>
+            )}
+            <div className="depo-setas">
+              <button type="button" className="depo-seta" aria-label={t('depoSetaEsq')} onClick={() => rolarDepos(-1)}>
+                <Icone nome="chevron-left" />
+              </button>
+              <button type="button" className="depo-seta" aria-label={t('depoSetaDir')} onClick={() => rolarDepos(1)}>
+                <Icone nome="chevron-right" />
+              </button>
+            </div>
+          </div>
           <div className="depoimentos-faixa">
-            <div className="depoimentos-trilho">
+            <div className="depoimentos-trilho" ref={trilhoDeposRef}>
               {cfg.depoimentos.map((d, i) => (
                 <article className="depoimento" key={i}>
+                  <span className="depoimento-aspas" aria-hidden="true"></span>
                   <span className="canto-mira" aria-hidden="true"></span>
                   <div className="depoimento-topo">
                     <span className="depoimento-avatar" aria-hidden="true">{d.nome.slice(0, 2).toUpperCase()}</span>
                     <div>
                       <p className="depoimento-nome">{d.nome}</p>
-                      <div className="depoimento-estrelas" role="img" aria-label={t('estrelasAria', { n: String(d.nota) })}><Estrelas nota={d.nota} /></div>
+                      <p className="depoimento-verificada"><Icone nome="badge-check" /> {t('depoVerificada')}</p>
                     </div>
+                    <div className="depoimento-estrelas" role="img" aria-label={t('estrelasAria', { n: String(d.nota) })}><Estrelas nota={d.nota} /></div>
                   </div>
                   <p className="depoimento-texto">{d.texto}</p>
                   <div className="depoimento-pe">
@@ -942,7 +986,7 @@ export default function App() {
                       <span className="depoimento-item-fig"><Icone nome="package" /></span>
                       <span>{d.produto}</span>
                     </span>
-                    <span>{d.data}</span>
+                    <span className="depoimento-data">{d.data}</span>
                   </div>
                 </article>
               ))}

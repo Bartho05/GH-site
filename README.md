@@ -130,7 +130,7 @@ O nome do produto precisa ser idêntico ao do painel — o mapa fica em
 - limite de 6 tentativas de login por minuto + **rate limit no checkout** (8 pedidos/10min por IP)
 - normalização no servidor: clamp de números/preços, limite de tamanho, remoção de tags HTML (anti-XSS), ids de categoria únicos
 - estático com bloqueio de path traversal
-- headers de segurança: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`
+- headers de segurança: `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`
 - OAuth Discord com **state anti-CSRF** de uso único; sessão do checkout expira em 30 min
 - webhook do MP só confere pelo pagamento re-buscado na API do MP
 - fila do FiveM autenticada por chave (comparação em tempo constante via sha256)

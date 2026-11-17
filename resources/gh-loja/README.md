@@ -1,69 +1,104 @@
-# gh-loja — entrega automática dos pedidos do site (Fase 3)
+# gh-loja — entrega automática no servidor (FiveM)
 
-Resource server-side para **QBCore/Qbox**. A cada 15 segundos ele busca a
-fila de entregas na API da loja e entrega os produtos comprados direto no
-inventário (ou via comando). Cada entrega é confirmada de volta na API.
+Resource **QBCore / Qbox** que busca, a cada 15s, os pedidos pagos na loja
+do site e entrega os itens/comandos in-game. Nenhum jogador precisa
+digitar nada: pagou no site → item chega no servidor.
 
 ## Instalação
 
-1. Copie a pasta `gh-loja` para dentro do `resources` do seu servidor:
+1. Copie a pasta `gh-loja` para `resources/` do seu servidor:
    ```
-   resources/
-   └── gh-loja/
-       ├── fxmanifest.lua
-       ├── config.lua
-       └── server.lua
+   [loja]
+   gh-loja
    ```
-2. No `server.cfg`, **depois** de iniciar o backend da loja:
+2. No `server.cfg`, **antes** do `ensure gh-loja`:
    ```cfg
-   # URL pública da API da loja (a mesma do site)
-   set gh_loja_api "https://loja.ghroleplay.com"
+   # URL da API da loja (a mesma do site; em produção use o endereço público)
+   set gh_loja_api "https://loja.seuservidor.com"
 
-   # MESMA chave configurada como GHRP_SERVER_KEY no backend (.env)
-   set gh_loja_chave "SUA-CHAVE-SECRETA-AQUI"
-
-   ensure gh-loja
+   # chave compartilhada — tem que ser IGUAL à GHRP_SERVER_KEY da API
+   set gh_loja_chave "SUA-CHAVE-SECRETA"
    ```
-3. Reinicie o servidor. No console deve aparecer:
-   `[gh-loja] resource da loja carregado — fila a cada 15s · API: ...`
+3. `ensure gh-loja` e reinicie o servidor.
 
-## Como o ID do jogador funciona
+No console do FiveM deve aparecer:
 
-No checkout o cliente informa o **ID no servidor**:
+```
+[gh-loja] resource da loja carregado — fila a cada 15s · API: https://...
+```
 
-- **número** (ex.: `64`) → tratado como *source* do jogador online;
-- **texto** (ex.: `ABC12345`) → tratado como *citizenid* (QBCore/Qbox).
+## Como funciona
 
-Jogador offline? A entrega fica na fila e tenta de novo na próxima rodada —
-nada se perde.
+1. Cliente compra no site → pedido fica `pendente`.
+2. Pagamento confirmado (Pix via Mercado Pago ou `pago` no painel) →
+   o backend cria uma **entrega pendente** para cada item do pedido.
+3. Este resource busca `GET /api/deliveries/queue` (header
+   `X-Server-Key`) e entrega:
+   - **Jogador online** → entrega na hora e marca `entregue` na API.
+   - **Jogador offline** → a entrega **continua na fila** e sai na
+     próxima rodada (15s) quando ele entrar. Nada se perde.
+4. Entregas com problema são marcadas `falhou` e avisam no console
+   (a staff entrega na mão pelo painel).
 
-## Mapeamento de produtos (`config.lua`)
+O jogador é resolvido por **ID numérico** (source do servidor, ex.: `22`)
+ou **citizenid** — o que o cliente preencher no checkout.
 
-Cada produto do site precisa existir em `Config.Produtos` com o **nome
-exatamente igual** ao do painel (copie e cole — inclusive o travessão `–`).
+## Mapeamento dos produtos (`config.lua`)
 
-| tipo       | efeito                                                              |
-| ---------- | ------------------------------------------------------------------- |
-| `item`     | entrega o `item` no inventário (quantidade vendida × `quantidade`)  |
-| `comando`  | roda o comando como console com `{playerId}`, `{quantidade}`, `{discordId}` |
-
-Produto sem mapeamento: é marcado como **falhou** na fila e o console
-avisa — a staff entrega na mão e marca o pedido como *entregue* no painel.
-
-Inventário cheio: a entrega fica pendente e tenta de novo automaticamente.
-
-## ox_inventory
-
-Se o servidor usa **ox_inventory** (comum em Qbox), troque a entrega de
-item em `server.lua` por:
+O nome do produto no painel precisa ser **idêntico** à chave do mapa
+(copie e cole — maiúsculas, espaços e o travessão `–` contam).
 
 ```lua
-local ok = exports.ox_inventory:AddItem(jogador.PlayerData.source, mapeamento.item, quantidade)
+Config.Produtos = {
+    ['VIP BRONZE – 7 DIAS'] = { tipo = 'comando', comando = 'addvip {playerId} bronze' },
+    ['GLOCK RUBI']          = { tipo = 'item',    item = 'weapon_pistol' },
+}
 ```
 
-## Conferindo a fila na mão
+| campo | o que faz |
+|---|---|
+| `tipo = 'item'` | `AddItem` no inventário do jogador. `quantidade` (opcional) multiplica a quantidade vendida |
+| `tipo = 'comando'` | executa o comando como console |
 
-```bash
-# lista pendentes (mesma chave do resource)
-curl -H "X-Server-Key: SUA-CHAVE-SECRETA-AQUI" https://loja.ghroleplay.com/api/deliveries/queue
+Marcadores disponíveis no `comando`:
+
+| marcador | vira |
+|---|---|
+| `{playerId}` | ID do jogador informado no checkout |
+| `{quantidade}` | quantidade vendida |
+| `{discordId}` | ID do Discord (quando o cliente logou com Discord) |
+
+**Sem mapeamento** → a entrega é marcada `falhou` e o console avisa com
+o nome exato do produto. Cadastre o produto no painel **depois** de
+adicionar a linha no `config.lua` (ou vice-versa — só mantenha iguais).
+
+> **ox_inventory**: o `AddItem` padrão é do QBCore. Se você usa
+> ox_inventory, troque em `server.lua` a chamada de entrega de item por
+> `exports.ox_inventory:AddItem(source, item, count)` (o resto não muda).
+
+## Chaves que conversam
+
 ```
+Backend (API)                    FiveM (server.cfg)
+GHRP_SERVER_KEY=xxxx       <->   set gh_loja_chave "xxxx"
+```
+
+Chave errada/vazia → fila responde **401** e o resource avisa no
+console sem spam (avisa uma vez só). Sem `GHRP_SERVER_KEY` na API →
+a fila responde **503**.
+
+## Teste rápido (sem entrar no jogo)
+
+Com a loja e o resource no ar:
+
+1. Compre um produto no site com o seu ID in-game.
+2. Marque o pedido como `pago` no painel (`/admin`).
+3. Em até 15s o item/comando executa no servidor e o console mostra
+   `entrega #N ok`.
+
+## Endpoints que o resource usa
+
+| rota | uso |
+|---|---|
+| `GET /api/deliveries/queue` | busca as pendências (até 50, mais antiga primeiro) |
+| `POST /api/deliveries/:id/marcar` | confirma `entregue` ou `falhou` |

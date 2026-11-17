@@ -52,5 +52,9 @@ Config.Produtos = {
     ['COMBO INICIANTE']        = { tipo = 'item',    item = 'combo_iniciante' },
     ['DANÇA EXCLUSIVA']        = { tipo = 'comando', comando = 'adddanca {playerId}' },
     ['SKIN PERSONALIZADA']     = { tipo = 'comando', comando = 'addskin {playerId}' },
-    ['RESETAR PERSONAGEM']     = { tipo = 'comando', comando = 'resetchar {playerId}' }
+    ['RESETAR PERSONAGEM']     = { tipo = 'comando', comando = 'resetchar {playerId}' },
+
+    -- BARCO é veículo: AJUSTE o comando abaixo ao do seu servidor
+    -- (aqui vai um spawn genérico de barco como exemplo).
+    ['BARCO']                  = { tipo = 'comando', comando = 'givevehicle {playerId} boat' }
 }

@@ -686,7 +686,10 @@ html[data-anim='off'] .podio-estilhaços { transform: none; transition: none; }
   background: rgb(var(--surface)); transition: border-color .25s, transform .25s;
   scroll-margin-top: 130px;
 }
-.produto-card:hover { border-color: rgba(255,255,255,.28); transform: translateY(-3px); }
+.produto-card:hover { border-color: rgba(255,255,255,.28); transform: translateY(-3px); box-shadow: 0 22px 44px -26px rgba(0,0,0,.9); }
+
+/* o card inteiro leva à página do produto (ProLeague) */
+.produto-card-clicavel { cursor: pointer; }
 .produto-marcas { position: relative; aspect-ratio: 1 / 1; overflow: hidden; display: grid; }
 .produto-marca-fig {
   inset: 0; position: absolute; display: grid; place-items: center;
@@ -740,36 +743,77 @@ html[data-anim='off'] .podio-estilhaços { transform: none; transition: none; }
 /* =========================================================
    Depoimentos
    ========================================================= */
-.depoimentos { padding-block: 2rem 3.5rem; }
-.secao-titulo { font-size: clamp(1.15rem, 2.4vw, 1.45rem); font-weight: 800; letter-spacing: -.01em; margin-bottom: 1rem; }
-.depoimentos-faixa { position: relative; overflow: hidden; }
-.depoimentos-trilho { display: flex; gap: .7rem; overflow-x: auto; scrollbar-width: none; scroll-behavior: smooth; padding-bottom: .3rem; }
+.depoimentos { padding-block: 2.5rem 4rem; }
+.secao-titulo { font-size: clamp(1.15rem, 2.4vw, 1.45rem); font-weight: 800; letter-spacing: -.01em; margin-bottom: .2rem; }
+.depo-cabeca { display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.depo-sub { font-size: .82rem; color: #9a9a9a; }
+
+/* resumo: nota média + contagem (estilo ProLeague) */
+.depo-media {
+  display: inline-flex; align-items: center; gap: .55rem; margin-left: auto;
+  padding: .4rem .75rem; border: 1px solid rgba(255,255,255,.09);
+  border-radius: .8rem; background: rgba(255,255,255,.03);
+}
+.depo-media-nota { font-size: 1.15rem; font-weight: 800; color: hsl(var(--primary)); font-variant-numeric: tabular-nums; }
+.depo-media-lado { display: flex; flex-direction: column; gap: 2px; }
+.depo-media-lado svg { width: 11px; height: 11px; color: hsl(var(--primary)); fill: hsl(var(--primary)); }
+.depo-media-lado svg.vazia { color: rgba(255,255,255,.2); fill: rgba(255,255,255,.08); }
+.depo-media-conta { font-size: .66rem; color: #9a9a9a; }
+
+/* setas do trilho */
+.depo-setas { display: flex; gap: .4rem; }
+.depo-seta {
+  width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+  border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #dcdcdc;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.depo-seta:hover { border-color: hsl(var(--primary) / .5); color: #fff; background: hsl(var(--primary) / .12); }
+.depo-seta svg { width: 16px; height: 16px; }
+
+.depoimentos-faixa { position: relative; }
+.depoimentos-trilho {
+  display: flex; gap: .7rem; overflow-x: auto; scrollbar-width: none;
+  scroll-behavior: smooth; scroll-snap-type: x proximity;
+  padding-block: 6px; scroll-padding-block: 6px;
+}
 .depoimentos-trilho::-webkit-scrollbar { display: none; }
 .depoimento {
-  min-width: min(320px, 82vw); flex-shrink: 0;
+  width: min(330px, 84vw); flex-shrink: 0; scroll-snap-align: start;
   display: flex; flex-direction: column; gap: .55rem;
   border: 1px solid rgba(255,255,255,.1); background: rgb(var(--surface));
-  border-radius: 1rem; padding: .9rem; position: relative;
-  transition: border-color .25s;
+  border-radius: 1rem; padding: 1rem; position: relative; overflow: hidden;
+  transition: border-color .25s, transform .25s, box-shadow .25s;
 }
-.depoimento:hover { border-color: rgba(255,255,255,.25); }
+.depoimento:hover { border-color: hsl(var(--primary) / .45); transform: translateY(-3px); box-shadow: 0 18px 40px -24px hsl(var(--primary) / .5); }
+.depoimento-aspas {
+  position: absolute; top: -16px; right: 12px; font-size: 5.2rem; line-height: 1;
+  font-family: Georgia, serif; color: hsl(var(--primary)); opacity: .08; pointer-events: none;
+}
 .depoimento .canto-mira { top: 10px; left: 10px; }
-.depoimento-topo { display: flex; align-items: center; gap: .6rem; padding-left: 8px; }
+.depoimento-topo { display: flex; align-items: center; gap: .6rem; }
 .depoimento-avatar {
-  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-  display: grid; place-items: center; font-size: .68rem; font-weight: 700;
-  color: hsl(var(--primary)); background: hsl(var(--primary) / .13); border: 1px solid hsl(var(--primary) / .3);
+  width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+  display: grid; place-items: center; font-size: .74rem; font-weight: 800; letter-spacing: .02em;
+  color: #fff; background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  box-shadow: 0 6px 16px -8px hsl(var(--primary) / .7);
 }
-.depoimento-nome { font-size: .8rem; font-weight: 600; }
-.depoimento-estrelas { display: flex; gap: 2px; margin-top: 2px; }
-.depoimento-estrelas svg { width: 12px; height: 12px; color: hsl(var(--primary)); fill: hsl(var(--primary)); }
+.depoimento-nome { font-size: .84rem; font-weight: 700; }
+.depoimento-verificada { display: inline-flex; align-items: center; gap: .25rem; font-size: .64rem; font-weight: 600; color: #22c55e; margin-top: 1px; }
+.depoimento-verificada svg { width: 11px; height: 11px; }
+.depoimento-estrelas { display: flex; gap: 2px; margin-left: auto; align-self: flex-start; margin-top: 2px; }
+.depoimento-estrelas svg { width: 13px; height: 13px; color: hsl(var(--primary)); fill: hsl(var(--primary)); }
 .depoimento-estrelas svg.vazia { color: rgba(255,255,255,.2); fill: rgba(255,255,255,.08); }
-.depoimento-texto { font-size: .82rem; color: #b9b9b9; flex: 1; }
+.depoimento-texto { font-size: .85rem; color: #c6c6c6; line-height: 1.55; flex: 1; }
 .depoimento-pe { display: flex; align-items: center; justify-content: space-between; gap: .6rem; border-top: 1px solid rgba(255,255,255,.08); padding-top: .6rem; font-size: .7rem; color: #9a9a9a; }
 .depoimento-item { display: inline-flex; min-width: 0; align-items: center; gap: .4rem; color: rgba(255,255,255,.85); font-weight: 500; }
 .depoimento-item-fig { width: 22px; height: 22px; border-radius: 6px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); display: grid; place-items: center; color: hsl(var(--primary)); }
 .depoimento-item-fig svg { width: 11px; height: 11px; }
 .depoimento-item span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+.depoimento-data { font-variant-numeric: tabular-nums; color: #8f8f8f; }
+@media (max-width: 560px) {
+  .depo-media { margin-left: 0; }
+  .depo-setas { margin-left: auto; }
+}
 
 /* =========================================================
    Rodapé
@@ -1338,6 +1382,7 @@ html[data-cursor='pontoG'] *, html[data-cursor='pontoG'] {
 
 /* foco de acessibilidade */
 :focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; border-radius: 4px; }
+::selection { background: hsl(var(--primary) / .55); color: #fff; }
 
 /* =========================================================
    Foto real do produto (card + página do produto)
