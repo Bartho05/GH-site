@@ -10,6 +10,28 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+
+/* ---- .env (opcional): as chaves (MP_ACCESS_TOKEN, GHRP_SERVER_KEY, ...)
+   podem morar num arquivo .env na pasta raiz — sem mexer no terminal.
+   Linhas no formato CHAVE=valor; # começa comentário; o que já estiver
+   definido no ambiente vence (não sobrescrevemos). ---- */
+(function lerEnv() {
+  const raizRepo = path.join(__dirname, '..', '..', '..');
+  for (const arquivo of [path.join(raizRepo, '.env'), path.join(__dirname, '..', '.env')]) {
+    let texto;
+    try { texto = fs.readFileSync(arquivo, 'utf8'); } catch (e) { continue; }
+    for (const bruta of texto.split(/\r?\n/)) {
+      const linha = bruta.trim();
+      if (!linha || linha.startsWith('#')) continue;
+      const eq = linha.indexOf('=');
+      if (eq < 1) continue;
+      const chave = linha.slice(0, eq).trim();
+      const valor = linha.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+      if (chave && !(chave in process.env)) process.env[chave] = valor;
+    }
+  }
+})();
+
 const api = require('./api');
 
 const RAIZ_WEB_TUDO = path.join(__dirname, '..', '..', 'web');

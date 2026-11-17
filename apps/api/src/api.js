@@ -235,7 +235,8 @@ async function despachar(req, res, ctx) {
         ...mesclarFundos(db.CONFIG_BASE, db.getConfig()),
         recursos: {
           pixAutomatico: !!process.env.MP_ACCESS_TOKEN,
-          discordLogin: !!(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET)
+          discordLogin: !!(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET),
+          serverKey: !!process.env.GHRP_SERVER_KEY
         }
       });
 

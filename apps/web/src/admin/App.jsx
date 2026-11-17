@@ -34,6 +34,7 @@ const ABAS = [
   { id: 'produtos', icone: 'package', nome: 'Produtos' },
   { id: 'depoimentos', icone: 'message-square', nome: 'Depoimentos' },
   { id: 'links', icone: 'link', nome: 'Links & redes' },
+  { id: 'integracoes', icone: 'plug', nome: 'Integrações' },
   { id: 'estatisticas', icone: 'trending-up', nome: 'Estatísticas' },
   { id: 'pedidos', icone: 'receipt', nome: 'Pedidos' },
   { id: 'entregas', icone: 'truck', nome: 'Entregas' },
@@ -217,6 +218,46 @@ function Linha({ children, onExcluir }) {
 }
 
 const OPCOES_ICONES = ICONES.map((i) => <option value={i} key={i}>{i}</option>);
+
+/* ---------- cartão da aba Integrações: status + linhas de .env + copiar ---------- */
+function CartaoIntegracao({ ligado, icone, nome, descricao, linhas, nota, aoToast }) {
+  const [copiado, setCopiado] = useState(false);
+
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(linhas.filter((l) => !l.startsWith('#')).join('\n'));
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1600);
+      if (aoToast) aoToast('Copiado! Cole no arquivo .env e preencha com os seus valores.');
+    } catch (e) {
+      if (aoToast) aoToast('Não consegui copiar — selecione o texto e copie à mão.', false);
+    }
+  }
+
+  return (
+    <div className="integra-card">
+      <div className="integra-topo">
+        <Icone nome={icone} />
+        <strong>{nome}</strong>
+        <span className={`integra-status ${ligado ? 'integra-on' : 'integra-off'}`}>
+          <span className="bola-integra" aria-hidden="true"></span>{ligado ? 'LIGADO' : 'DESLIGADO'}
+        </span>
+      </div>
+      <p className="integra-desc">{descricao}</p>
+      <div className="integra-bloco">
+        <pre>
+          {linhas.map((l, i) => (
+            <span key={i}>{l.startsWith('#') ? <span className="coment">{l}</span> : l}{'\n'}</span>
+          ))}
+        </pre>
+        <button type="button" className="integra-copiar" onClick={copiar} aria-label="Copiar as linhas de configuração">
+          <Icone nome={copiado ? 'check' : 'copy'} />
+        </button>
+      </div>
+      {nota ? <p className="integra-nota">{nota}</p> : null}
+    </div>
+  );
+}
 
 /* =========================================================
    App do painel
@@ -695,6 +736,7 @@ export default function App() {
      Painel
      ========================================================= */
   const cfg = rascunho || paraRascunho(CONFIG_BASE);
+  const rec = cfg.recursos || {};
 
   return (
     <div id="app">
@@ -893,24 +935,71 @@ export default function App() {
           {/* PRODUTOS */}
           <section className={`secao${aba === 'produtos' ? ' ativa' : ''}`}>
             <h2>Produtos</h2>
-            <p className="secao-dica">Preço antigo vazio = sem promoção. Cores = gradiente da capa do card. Imagem e descrição aparecem na página do produto (opcional).</p>
+            <p className="secao-dica">Um cartão por produto. Preço antigo vazio = sem promoção. Selo, imagem e descrição são opcionais e aparecem na página do produto (a descrição aceita Enter para quebrar linha). A capa do cartão usa as duas cores + ícone — a prévia atualiza enquanto você edita.</p>
             <div className="empilhador">
-              {cfg.produtos.map((p, i) => (
-                <Linha key={i} onExcluir={() => excluirLinha('produtos', i)}>
-                  <select className="campo b-medio" value={p.categoria || ''} onChange={(e) => editarLinha('produtos', i, 'categoria', e.target.value)}>
-                    {cfg.categorias.map((c) => <option value={c.id} key={c.id}>{c.nome}</option>)}
-                  </select>
-                  <input className="campo b-largo" placeholder="Nome do produto" value={p.nome} onChange={(e) => editarLinha('produtos', i, 'nome', e.target.value)} />
-                  <input className="campo c-curto" type="number" step={0.01} min={0} placeholder="R$" value={p.preco} onChange={(e) => editarLinha('produtos', i, 'preco', e.target.value)} />
-                  <input className="campo c-curto" type="number" step={0.01} min={0} placeholder="era R$" value={p.precoAntigo ?? ''} onChange={(e) => editarLinha('produtos', i, 'precoAntigo', e.target.value)} />
-                  <select className="campo b-medio" value={p.icone || 'package'} onChange={(e) => editarLinha('produtos', i, 'icone', e.target.value)}>{OPCOES_ICONES}</select>
-                  <input type="color" className="b-cor" title="Cor 1 do gradiente" value={p.cor1 || (p.cores ? p.cores[0] : '#2a2030')} onChange={(e) => editarLinha('produtos', i, 'cor1', e.target.value)} />
-                  <input type="color" className="b-cor" title="Cor 2 do gradiente" value={p.cor2 || (p.cores ? p.cores[1] : '#141118')} onChange={(e) => editarLinha('produtos', i, 'cor2', e.target.value)} />
-                  <input className="campo b-medio" placeholder="selo (opcional)" value={p.tag || ''} onChange={(e) => editarLinha('produtos', i, 'tag', e.target.value)} />
-                  <input className="campo b-largo campo-mono" placeholder="URL da imagem (opcional)" value={p.imagem || ''} onChange={(e) => editarLinha('produtos', i, 'imagem', e.target.value)} />
-                  <input className="campo b-largo" placeholder="Descrição curta (opcional)" value={p.descricao || ''} onChange={(e) => editarLinha('produtos', i, 'descricao', e.target.value)} />
-                </Linha>
-              ))}
+              {cfg.produtos.map((p, i) => {
+                const c1 = p.cor1 || (p.cores ? p.cores[0] : '#2a2030');
+                const c2 = p.cor2 || (p.cores ? p.cores[1] : '#141118');
+                const antigo = Number(p.precoAntigo);
+                const temPromo = p.precoAntigo !== '' && !isNaN(antigo) && antigo > Number(p.preco);
+                return (
+                  <div className="produto-editor" key={i}>
+                    <div className="pe-topo">
+                      <span className="pe-fig" style={{ '--c1': c1, '--c2': c2 }} aria-hidden="true"><Icone nome={p.icone || 'package'} /></span>
+                      <div className="pe-titulos">
+                        <strong>{p.nome || 'Novo produto'}</strong>
+                        <small>{dinheiro(p.preco)}{temPromo ? ' (antes ' + dinheiro(antigo) + ')' : ''}</small>
+                      </div>
+                      <button type="button" className="btn-excluir" aria-label={'Excluir ' + (p.nome || 'produto')} onClick={() => excluirLinha('produtos', i)}>
+                        <Icone nome="trash-2" />
+                      </button>
+                    </div>
+                    <div className="pe-grade">
+                      <label className="pe-campo">
+                        <span>Categoria</span>
+                        <select className="campo" value={p.categoria || ''} onChange={(e) => editarLinha('produtos', i, 'categoria', e.target.value)}>
+                          {cfg.categorias.map((c) => <option value={c.id} key={c.id}>{c.nome}</option>)}
+                        </select>
+                      </label>
+                      <label className="pe-campo pe-2">
+                        <span>Nome do produto</span>
+                        <input className="campo" placeholder="ex.: VIP BRONZE – 7 DIAS" value={p.nome} onChange={(e) => editarLinha('produtos', i, 'nome', e.target.value)} />
+                      </label>
+                      <label className="pe-campo">
+                        <span>Preço (R$)</span>
+                        <input className="campo" type="number" step={0.01} min={0} placeholder="14.99" value={p.preco} onChange={(e) => editarLinha('produtos', i, 'preco', e.target.value)} />
+                      </label>
+                      <label className="pe-campo">
+                        <span>Preço antigo <small>(promoção)</small></span>
+                        <input className="campo" type="number" step={0.01} min={0} placeholder="19.99" value={p.precoAntigo ?? ''} onChange={(e) => editarLinha('produtos', i, 'precoAntigo', e.target.value)} />
+                      </label>
+                      <label className="pe-campo">
+                        <span>Ícone</span>
+                        <select className="campo" value={p.icone || 'package'} onChange={(e) => editarLinha('produtos', i, 'icone', e.target.value)}>{OPCOES_ICONES}</select>
+                      </label>
+                      <label className="pe-campo">
+                        <span>Selo <small>(opcional)</small></span>
+                        <input className="campo" placeholder="ex.: Promoção" value={p.tag || ''} onChange={(e) => editarLinha('produtos', i, 'tag', e.target.value)} />
+                      </label>
+                      <div className="pe-campo" role="group" aria-label="Cores do gradiente da capa">
+                        <span>Cores da capa</span>
+                        <div className="pe-cores">
+                          <input type="color" className="b-cor" title="Cor 1 do gradiente" value={c1} onChange={(e) => editarLinha('produtos', i, 'cor1', e.target.value)} />
+                          <input type="color" className="b-cor" title="Cor 2 do gradiente" value={c2} onChange={(e) => editarLinha('produtos', i, 'cor2', e.target.value)} />
+                        </div>
+                      </div>
+                      <label className="pe-campo pe-full">
+                        <span>URL da imagem <small>(opcional — substitui o ícone na capa)</small></span>
+                        <input className="campo campo-mono" placeholder="https://.../imagem.png" value={p.imagem || ''} onChange={(e) => editarLinha('produtos', i, 'imagem', e.target.value)} />
+                      </label>
+                      <label className="pe-campo pe-full">
+                        <span>Descrição <small>(opcional — Enter quebra linha; aparece na página do produto)</small></span>
+                        <textarea rows={3} className="campo" placeholder={'BENEFÍCIOS:\nPrioridade na fila\nAcesso aos veículos'} value={p.descricao || ''} onChange={(e) => editarLinha('produtos', i, 'descricao', e.target.value)} />
+                      </label>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <button type="button" className="btn btn-fantasma btn-add" onClick={addLinha.produtos}><Icone nome="plus" /> Adicionar produto</button>
           </section>
@@ -949,6 +1038,48 @@ export default function App() {
               ))}
             </div>
             <button type="button" className="btn btn-fantasma btn-add" onClick={addLinha.links}><Icone nome="plus" /> Adicionar link</button>
+          </section>
+
+          {/* INTEGRAÇÕES (chaves de API) */}
+          <section className={`secao${aba === 'integracoes' ? ' ativa' : ''}`}>
+            <h2>Integrações — onde ficam as chaves</h2>
+            <p className="secao-dica">As chaves de API <strong>não são configuradas aqui no painel</strong>: elas moram no arquivo <code>.env</code> na pasta raiz do projeto (a mesma onde você roda <code>npm start</code>). Os cartões abaixo mostram o status real de cada integração neste servidor.</p>
+            {modo !== 'servidor' ? <p className="secao-dica" style={{ color: '#f5b43c' }}>Você está no modo local — entre com a senha do servidor para ver o status real das integrações.</p> : null}
+            <ol className="integra-passos">
+              <li>Crie o arquivo <code>.env</code> na pasta do projeto (o <code>.env.exemplo</code> na raiz é o modelo — copie e renomeie).</li>
+              <li>Cole as linhas da integração que quer ligar usando o botão <strong>copiar</strong> de cada cartão, e preencha com os seus valores.</li>
+              <li>Reinicie o servidor (<code>npm start</code>) — o cartão fica <strong>verde</strong> quando a chave for reconhecida.</li>
+            </ol>
+            <div className="integra-lista">
+              <CartaoIntegracao
+                ligado={!!rec.pixAutomatico}
+                icone="zap"
+                nome="Pix automático (Mercado Pago)"
+                aoToast={toastMsg}
+                descricao="O cliente paga no Pix e o pedido vira “pago” sozinho, em segundos, sem você tocar em nada. Desligado, o pedido fica pendente e você marca o pagamento à mão na aba Pedidos depois de conferir no app do Mercado Pago."
+                linhas={['# .env — na pasta raiz do projeto', 'MP_ACCESS_TOKEN=SEU_TOKEN_DE_PRODUCAO_AQUI']}
+                nota={<>Onde arrumar: <strong>mercadopago.com → Suas integrações → Credenciais de produção → Access token</strong> (copie o token de produção; o de teste só serve pra testes).</>}
+              />
+              <CartaoIntegracao
+                ligado={!!rec.discordLogin}
+                icone="users"
+                nome="Login com Discord"
+                aoToast={toastMsg}
+                descricao="O cliente entra com o Discord no checkout: fica registrado quem comprou (tag + id) e ele tem histórico em “Minha conta”. Sem as chaves, o cliente preenche só o ID do jogo."
+                linhas={['# .env — na pasta raiz do projeto', 'DISCORD_CLIENT_ID=ID_DO_SEU_APP', 'DISCORD_CLIENT_SECRET=SECRET_DO_SEU_APP', 'GHRP_ORIGIN=https://loja.seudominio.com']}
+                nota={<>Onde arrumar: <strong>discord.com/developers → New Application → OAuth2</strong> — copie o Client ID e o Client Secret; em Redirects adicione <code>https://seusite.com/api/auth/discord/callback</code>. O <code>GHRP_ORIGIN</code> precisa ser o endereço público da loja.</>}
+              />
+              <CartaoIntegracao
+                ligado={!!rec.serverKey}
+                icone="truck"
+                nome="Entrega automática no servidor (FiveM)"
+                aoToast={toastMsg}
+                descricao="O resource gh-loja no FiveM busca a fila de entregas com esta chave e entrega os itens/comandos in-game. Sem ela, a fila responde 503 e nada é entregue automaticamente."
+                linhas={['# .env — na pasta raiz do projeto (API da loja)', 'GHRP_SERVER_KEY=uma-chave-secreta-bem-longa']}
+                nota={<>A <strong>mesma chave</strong> vai no server.cfg do FiveM: <code>set gh_loja_chave "uma-chave-secreta-bem-longa"</code>. Passo a passo completo em <code>resources/gh-loja/README.md</code>.</>}
+              />
+            </div>
+            <p className="integra-nota" style={{ marginTop: '.8rem' }}>Cada cartão mostra só <strong>se a chave existe</strong> — o valor delas nunca vem para o navegador.</p>
           </section>
 
           {/* ESTATÍSTICAS */}

@@ -5,6 +5,8 @@ resource de entrega automática in-game.
 
 > Código e conteúdo são próprios — nada foi copiado de outro site.
 
+**👉 Guia do dono, do zero, em português simples: [`GUIA-DO-DONO.md`](GUIA-DO-DONO.md)** — como ligar a loja, editar produtos pelo painel, onde colar cada chave de API (arquivo `.env`) e como testar uma compra de verdade.
+
 ## Estrutura
 
 | Pasta     | O que é |

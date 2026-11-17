@@ -4,3 +4,5 @@ apps/web/dist/
 npm-debug.log*
 *.log
 .DS_Store
+# chaves de API locais — NUNCA vão pro repositório
+.env

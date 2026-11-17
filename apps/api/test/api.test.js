@@ -188,9 +188,10 @@ test('muda status do pedido e filtra listagem', async () => {
 test('config expõe recursos e checkout de fábrica', async () => {
   const r = await pede('/api/config');
   assert.equal(r.status, 200);
-  assert.deepEqual(Object.keys(r.dados.recursos).sort(), ['discordLogin', 'pixAutomatico']);
+  assert.deepEqual(Object.keys(r.dados.recursos).sort(), ['discordLogin', 'pixAutomatico', 'serverKey']);
   assert.equal(r.dados.recursos.pixAutomatico, false); // sem MP_ACCESS_TOKEN nos testes
   assert.equal(r.dados.recursos.discordLogin, false);
+  assert.equal(r.dados.recursos.serverKey, true); // os testes definem GHRP_SERVER_KEY no topo do arquivo
   assert.ok(r.dados.checkout && typeof r.dados.checkout.chavePix === 'string');
 });
 
